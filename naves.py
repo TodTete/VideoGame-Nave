@@ -207,17 +207,17 @@ fuente_grande = pygame.font.SysFont("Arial", 48, bold=True)
 fuente_titulo = pygame.font.SysFont("Arial", 56, bold=True)
 
 # Sonidos (opcionales)
-sonido_inicio   = cargar_sonido("game-start-317318.mp3", 0.6)
-sonido_gameover = cargar_sonido("game-over-381772.mp3", 0.6)
-sonido_disparo  = cargar_sonido("laser-shot-ingame-230500.mp3", 0.4)
-sonido_explosion= cargar_sonido("wood-crate-destory-2-97263.mp3", 0.55)
-sonido_boss     = cargar_sonido("boss.mp3", 0.11) 
-sonido_power    = cargar_sonido("powerup.mp3", 0.6)     
+sonido_inicio   = cargar_sonido("assets/game-start-317318.mp3", 0.6)
+sonido_gameover = cargar_sonido("assets/game-over-381772.mp3", 0.6)
+sonido_disparo  = cargar_sonido("assets/laser-shot-ingame-230500.mp3", 0.4)
+sonido_explosion= cargar_sonido("assets/wood-crate-destory-2-97263.mp3", 0.55)
+sonido_boss     = cargar_sonido("assets/boss.mp3", 0.11) 
+sonido_power    = cargar_sonido("assets/powerup.mp3", 0.6)     
 
 reproducir(sonido_inicio)
 
 # Fondo animado
-bg = AnimatedBackground("fondo.gif", "fondo-gf.gif")
+bg = AnimatedBackground("assets/fondo.gif", "assets/fondo-gf.gif")
 
 # =========================
 # Clase Jugador (Nave con forma y tilt)
