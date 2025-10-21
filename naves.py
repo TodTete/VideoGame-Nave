@@ -6,10 +6,10 @@ import math
 
 # ======= GIF loader (Pillow) =======
 try:
-    from PIL import Image, ImageSequence
+    from PIL import Image
     PIL_OK = True
 except Exception as e:
-    print("[AVISO] Pillow no disponible, los fondos GIF serán estáticos:", e)
+    print("[AVISO] Pillow no disponible, los GIF se verán estáticos:", e)
     PIL_OK = False
 
 # =========================
@@ -84,51 +84,146 @@ def guardar_hiscore(puntos, ruta="hiscore.txt"):
     except Exception as e:
         print(f"[AVISO] No se pudo guardar hiscore: {e}")
 
-# ======= GIF Animado como fondo =======
+# ======= GIF: carga compuesta (flatten) =======
 def load_gif_frames(path, size=(ANCHO, ALTO)):
+    """
+    Carga un GIF animado como lista de Surfaces de Pygame (con alpha).
+    Compone cada frame sobre un lienzo RGBA completo para evitar parches negros.
+    Respeta duración por frame.
+    """
     frames = []
     durations = []
+
     if not PIL_OK:
+        # Sin Pillow: intenta imagen estática
         try:
-            img = pygame.image.load(path).convert()
-            img = pygame.transform.smoothscale(img, size)
+            img = pygame.image.load(path).convert_alpha()
+            if size is not None:
+                img = pygame.transform.smoothscale(img, size)
             frames = [img]
             durations = [120]
         except Exception as e:
-            print(f"[AVISO] No se pudo cargar fondo '{path}': {e}")
-            surf = pygame.Surface(size)
-            surf.fill((5, 5, 15))
-            frames = [surf]
-            durations = [120]
+            print(f"[AVISO] No se pudo cargar '{path}': {e}")
+            surf = pygame.Surface(size, pygame.SRCALPHA)
+            surf.fill((5, 5, 15, 255))
+            frames, durations = [surf], [120]
         return frames, durations
 
     try:
         im = Image.open(path)
-        base_frames = []
-        base_durations = []
-        for frame in ImageSequence.Iterator(im):
-            frame = frame.convert("RGBA")
-            dur = frame.info.get("duration", 100)
-            base_durations.append(max(20, int(dur)))
-            if size is not None:
-                frame = frame.resize(size, Image.LANCZOS)
-            mode = frame.mode
-            data = frame.tobytes()
-            py_img = pygame.image.fromstring(data, frame.size, mode)
-            base_frames.append(py_img.convert_alpha())
-        if not base_frames:
+
+        # Aseguramos RGBA para componer
+        frame_count = getattr(im, "n_frames", 1)
+        canvas_size = im.size
+        prev = Image.new("RGBA", canvas_size, (0, 0, 0, 0))
+
+        for i in range(frame_count):
+            im.seek(i)
+            # Duración (ms), mínimo razonable
+            dur = max(20, int(im.info.get("duration", 100)))
+
+            # Frame actual a RGBA
+            curr = im.convert("RGBA")
+
+            # Componer sobre acumulado
+            composed = prev.copy()
+            composed.alpha_composite(curr, dest=(0, 0))
+
+            # Manejo simple de "disposal": 2 => restaurar a fondo (transparente)
+            disposal = getattr(im, "disposal", im.info.get("disposal", 0))
+            if disposal == 2:
+                next_prev = Image.new("RGBA", canvas_size, (0, 0, 0, 0))
+                next_prev.alpha_composite(prev, dest=(0, 0))
+            else:
+                next_prev = composed
+
+            # Escalar si procede
+            out_img = composed
+            if size is not None and size != canvas_size:
+                out_img = composed.resize(size, Image.LANCZOS)
+
+            data = out_img.tobytes()
+            py_img = pygame.image.fromstring(data, out_img.size, "RGBA").convert_alpha()
+
+            frames.append(py_img)
+            durations.append(dur)
+
+            prev = next_prev
+
+        if not frames:
             raise ValueError("GIF sin frames")
-        return base_frames, base_durations
+
+        return frames, durations
+
     except Exception as e:
         print(f"[AVISO] Error cargando GIF '{path}': {e}")
-        surf = pygame.Surface(size)
-        surf.fill((5, 5, 15))
+        surf = pygame.Surface(size, pygame.SRCALPHA)
+        surf.fill((5, 5, 15, 255))
         return [surf], [120]
+
+# ======= Asteroide animado (enemigos que caen) =======
+ASTEROID_W, ASTEROID_H = 40, 40
+def _cargar_asteroid_frames():
+    for ruta in ("assets/asteroides.gif",):
+        frames, durs = load_gif_frames(ruta, size=(ASTEROID_W, ASTEROID_H))
+        if frames and len(frames) >= 1:
+            print(f"[INFO] Asteroides cargados desde: {ruta} ({len(frames)} frames)")
+            return frames, durs
+    print("[AVISO] No se encontró 'asteroides.gif'. Se usará un placeholder.")
+    surf = pygame.Surface((ASTEROID_W, ASTEROID_H), pygame.SRCALPHA)
+    surf.fill((200, 80, 80, 180))
+    return [surf], [120]
+
+# ======= Nave y Jefe: GIFs =======
+PLAYER_W, PLAYER_H = 60, 60
+BOSS_W, BOSS_H = 220, 100
+
+def _cargar_player_frames():
+    for ruta in ("assets/nave.gif",):
+        frames, durs = load_gif_frames(ruta, size=(PLAYER_W, PLAYER_H))
+        if frames:
+            print(f"[INFO] Nave cargada desde: {ruta} ({len(frames)} frames)")
+            return frames, durs
+    print("[AVISO] No se encontró 'nave.gif'. Se usará un placeholder.")
+    surf = pygame.Surface((PLAYER_W, PLAYER_H), pygame.SRCALPHA)
+    pygame.draw.polygon(surf, (30, 120, 240),
+                        [(PLAYER_W//2, 4), (10, PLAYER_H-6), (PLAYER_W-10, PLAYER_H-6)])
+    return [surf], [120]
+
+def _cargar_boss_frames():
+    for ruta in ("assets/jefe.gif",):
+        frames, durs = load_gif_frames(ruta, size=(BOSS_W, BOSS_H))
+        if frames:
+            print(f"[INFO] Jefe cargado desde: {ruta} ({len(frames)} frames)")
+            return frames, durs
+    print("[AVISO] No se encontró 'jefe.gif'. Se usará un placeholder.")
+    surf = pygame.Surface((BOSS_W, BOSS_H), pygame.SRCALPHA)
+    pygame.draw.rect(surf, (140,25,25), (0,0,BOSS_W,BOSS_H), border_radius=16)
+    return [surf], [120]
+
+# ======= Bala (imagen) =======
+def cargar_imagen_bala():
+    try:
+        img = pygame.image.load("assets/bala.png").convert_alpha()
+        # tamaño recomendado para que encaje con el juego:
+        img = pygame.transform.smoothscale(img, (8, 18))
+        return img
+    except Exception as e:
+        print(f"[AVISO] No se pudo cargar 'assets/bala.png': {e}")
+        ph = pygame.Surface((8, 18), pygame.SRCALPHA)
+        pygame.draw.rect(ph, (255,255,255), ph.get_rect(), border_radius=3)
+        return ph
+
+# Deferimos la carga hasta después de set_mode
+ASTEROID_FRAMES, ASTEROID_DURS = None, None
+PLAYER_FRAMES, PLAYER_DURS = None, None
+BOSS_FRAMES, BOSS_DURS = None, None
+BALA_IMG = None
 
 class AnimatedBackground:
     def __init__(self, path_main="assets/fondo.gif", path_boss="assets/fondo-gf.gif"):
-        self.frames_a, self.durs_a = load_gif_frames(path_main)
-        self.frames_b, self.durs_b = load_gif_frames(path_boss)
+        self.frames_a, self.durs_a = load_gif_frames(path_main, size=(ANCHO, ALTO))
+        self.frames_b, self.durs_b = load_gif_frames(path_boss, size=(ANCHO, ALTO))
         self.use_b = False
         self.idx_a = 0
         self.idx_b = 0
@@ -201,11 +296,18 @@ except Exception as e:
 
 ventana = pygame.display.set_mode((ANCHO, ALTO))
 pygame.display.set_caption("Game Nave")
+print(f"[INFO] PIL_OK={PIL_OK}")
 
 clock = pygame.time.Clock()
 fuente = pygame.font.SysFont("Arial", 24)
 fuente_grande = pygame.font.SysFont("Arial", 48, bold=True)
 fuente_titulo = pygame.font.SysFont("Arial", 56, bold=True)
+
+# GIFs (tras set_mode)
+if ASTEROID_FRAMES is None: ASTEROID_FRAMES, ASTEROID_DURS = _cargar_asteroid_frames()
+if PLAYER_FRAMES is None:   PLAYER_FRAMES, PLAYER_DURS   = _cargar_player_frames()
+if BOSS_FRAMES is None:     BOSS_FRAMES, BOSS_DURS       = _cargar_boss_frames()
+if BALA_IMG is None:        BALA_IMG = cargar_imagen_bala()
 
 # Sonidos (opcionales)
 sonido_inicio   = cargar_sonido("assets/game-start-317318.mp3", 0.6)
@@ -242,89 +344,98 @@ def cam_apply_rect(r):
     return pygame.Rect(r.left + int(cam_x), r.top + int(cam_y), r.width, r.height)
 
 # =========================
-# Clase Jugador
+# Clase Bala (usa imagen)
+# =========================
+class Bala:
+    def __init__(self, x, y, vy=-9):
+        self.image = BALA_IMG
+        self.rect = self.image.get_rect(center=(x, y))
+        self.vx = 0
+        self.vy = vy
+
+    def update(self):
+        self.rect.x += self.vx
+        self.rect.y += self.vy
+        # True si sigue en pantalla
+        return self.rect.bottom > 0 and self.rect.top < ALTO and self.rect.right > 0 and self.rect.left < ANCHO
+
+    def draw(self, surface):
+        drect = cam_apply_rect(self.rect)
+        surface.blit(self.image, drect.topleft)
+
+# =========================
+# Clase Jugador (usa GIF)
 # =========================
 class Jugador:
     def __init__(self, centerx, bottom):
-        self.base_w = 60
-        self.base_h = 60
-        self.base_image = self._crear_superficie_nave(self.base_w, self.base_h)
-        self.rect = pygame.Rect(0, 0, 50, 50)
+        self.w = PLAYER_W
+        self.h = PLAYER_H
+        self.rect = pygame.Rect(0, 0, self.w, self.h)
         self.rect.centerx = centerx
         self.rect.bottom = bottom
+
+        # Animación
+        self.anim_idx = 0
+        self.anim_accum = 0  # ms
+
+        # Movimiento/tilt
         self.vel_base = 6
         self.vel = self.vel_base
         self.angle = 0.0
         self.target_angle = 0.0
         self.ANGLE_MAX = 22.0
         self.ANGLE_SPEED = 240.0
-        self.nose_local = (self.base_w/2, 6)
 
-    def _crear_superficie_nave(self, w, h):
-        surf = pygame.Surface((w, h), pygame.SRCALPHA)
-        def P(x, y): return (int(x), int(y))
-        col_body_dark = (20, 85, 190)
-        col_body      = (30, 120, 240)
-        col_wing      = (18, 70, 160)
-        col_trim      = (220, 240, 255)
-        col_cockpit   = (175, 230, 255)
-        nose = P(w*0.5, 4); lw1=P(w*0.18,h*0.52); rw1=P(w*0.82,h*0.52); tl=P(w*0.36,h-6); tr=P(w*0.64,h-6)
-        hull=[tl,lw1,nose,rw1,tr]
-        pygame.draw.polygon(surf, col_body_dark, hull)
-        lw1i=P(w*0.22,h*0.53); rw1i=P(w*0.78,h*0.53); tli=P(w*0.40,h-8); tri=P(w*0.60,h-8)
-        hull_inner=[tli,lw1i,P(w*0.5,8),rw1i,tri]
-        pygame.draw.polygon(surf, col_body, hull_inner)
-        left_wing=[lw1,P(w*0.02,h*0.70),P(w*0.30,h*0.74)]
-        right_wing=[rw1,P(w-2,h*0.70),P(w*0.70,h*0.74)]
-        pygame.draw.polygon(surf, col_wing, left_wing)
-        pygame.draw.polygon(surf, col_wing, right_wing)
-        cockpit_rect = pygame.Rect(0,0,int(w*0.24), int(h*0.16)); cockpit_rect.center = P(w*0.5, h*0.28)
-        pygame.draw.ellipse(surf, col_cockpit, cockpit_rect); pygame.draw.ellipse(surf, col_trim, cockpit_rect, 2)
-        pygame.draw.line(surf, col_trim, P(w*0.5,h*0.12), P(w*0.5,h*0.80), 2)
-        pygame.draw.lines(surf, col_trim, True, hull, 2)
-        return surf
-
-    def _rotated_image_and_rect(self):
-        rotated = pygame.transform.rotozoom(self.base_image, -self.angle, 1.0)
-        rrect = rotated.get_rect(center=self.rect.center)
-        return rotated, rrect
+        # Punto de la “nariz” para disparo (parte superior central)
+        self.nose_local = (self.w/2, 6)
 
     def get_muzzle_world(self):
         from pygame.math import Vector2
-        base_center = Vector2(self.base_w/2, self.base_h/2)
+        base_center = Vector2(self.w/2, self.h/2)
         nose = Vector2(self.nose_local)
         offset = nose - base_center
         spawn = Vector2(self.rect.center) + offset.rotate(-self.angle)
         return int(spawn.x), int(spawn.y)
 
     def update(self, dt_ms, keys, bounds_rect):
+        # Movimiento
         dx = 0; dy = 0
         if keys[pygame.K_LEFT]:  dx -= self.vel
         if keys[pygame.K_RIGHT]: dx += self.vel
         if keys[pygame.K_UP]:    dy -= self.vel
         if keys[pygame.K_DOWN]:  dy += self.vel
-
         self.rect.move_ip(dx, dy)
         self.rect.clamp_ip(bounds_rect)
 
+        # Tilt objetivo
         if dx > 0:   self.target_angle = +self.ANGLE_MAX
         elif dx < 0: self.target_angle = -self.ANGLE_MAX
         else:        self.target_angle = 0.0
 
+        # Interpolar ángulo
         max_delta = self.ANGLE_SPEED * (dt_ms / 1000.0)
         if self.angle < self.target_angle:
             self.angle = min(self.angle + max_delta, self.target_angle)
         elif self.angle > self.target_angle:
             self.angle = max(self.angle - max_delta, self.target_angle)
 
+        # Animación
+        self.anim_accum += dt_ms
+        if self.anim_accum >= PLAYER_DURS[self.anim_idx]:
+            self.anim_accum = 0
+            self.anim_idx = (self.anim_idx + 1) % len(PLAYER_FRAMES)
+
     def draw(self, surface, visible=True):
         if not visible: return
-        img, r = self._rotated_image_and_rect()
-        r.center = cam_apply_point(r.centerx, r.centery)
-        surface.blit(img, r)
+        frame = PLAYER_FRAMES[self.anim_idx]
+        # Rotación suave del frame actual
+        rotated = pygame.transform.rotozoom(frame, -self.angle, 1.0)
+        rrect = rotated.get_rect(center=self.rect.center)
+        rrect.center = cam_apply_point(rrect.centerx, rrect.centery)
+        surface.blit(rotated, rrect)
 
 # =========================
-# Boss y balas
+# Boss y balas (jefe con GIF)
 # =========================
 class Boss:
     """
@@ -337,21 +448,24 @@ class Boss:
     """
     def __init__(self, level):
         self.level = level
-        self.w = 220
-        self.h = 100
+        self.w = BOSS_W
+        self.h = BOSS_H
         self.rect = pygame.Rect(ANCHO//2 - self.w//2, 60, self.w, self.h)
         self.hp_max = 160 + (level-1)*80
         self.hp = self.hp_max
         self.move_speed = 2.2 + (level-1)*0.6
         self.dir = 1
-        self.color = (140, 25, 25)
 
+        # Animación
+        self.anim_idx = 0
+        self.anim_accum = 0
+
+        # Disparo/patrones
         self.fire_cd_ms = max(350, 900 - (level-1)*120)
         self.last_pattern_change = 0
         self.pattern_duration = 2400
         self.attack_mode = 0
         self.last_shot = 0
-
         self.cannons = [0.2, 0.5, 0.8]
 
         # Laser
@@ -438,6 +552,7 @@ class Boss:
                 self.laser_rect = None
 
     def update(self, dt, ahora, player_rect, boss_bullets):
+        # Movimiento lateral
         self.rect.x += int(self.move_speed) * self.dir
         if self.rect.right >= ANCHO - 10:
             self.rect.right = ANCHO - 10
@@ -446,12 +561,14 @@ class Boss:
             self.rect.left = 10
             self.dir = 1
 
+        # Cambios de patrón
         if ahora - self.last_pattern_change >= self.pattern_duration:
             self.last_pattern_change = ahora
             self.attack_mode = (self.attack_mode + 1) % 5
             self.laser_active = False
             self.laser_rect = None
 
+        # Disparos según patrón
         if self.attack_mode == 0:
             self._pattern_aimed(ahora, player_rect, boss_bullets)
         elif self.attack_mode == 1:
@@ -463,14 +580,18 @@ class Boss:
         elif self.attack_mode == 4:
             self._pattern_laser(ahora, boss_bullets)
 
+        # Animación
+        self.anim_accum += dt
+        if self.anim_accum >= BOSS_DURS[self.anim_idx]:
+            self.anim_accum = 0
+            self.anim_idx = (self.anim_idx + 1) % len(BOSS_FRAMES)
+
     def draw(self, surface, ahora):
+        # Sprite
+        frame = BOSS_FRAMES[self.anim_idx]
         drect = cam_apply_rect(self.rect)
-        pygame.draw.rect(surface, self.color, drect, border_radius=16)
-        pygame.draw.rect(surface, (200, 60, 60), drect.inflate(-20, -30), border_radius=12)
-        slit_h = 10
-        for i in range(4):
-            r = pygame.Rect(drect.left + 20 + i*45, drect.top + 20, 35, slit_h)
-            pygame.draw.rect(surface, (255, 180, 180), r, border_radius=6)
+        surface.blit(frame, drect.topleft)
+
         # Vida
         bar_w = self.w
         bar_h = 10
@@ -514,7 +635,7 @@ class PowerUp:
         dibujar_texto(surface, self.tipo, fuente, NEGRO, cx, cy, centrado=True)
 
 # =========================
-# Bomba PowerUp (aparece con el jefe, se recoge; si se recoge DISPARA automático)
+# Bomba PowerUp
 # =========================
 class BombPickup:
     LIFETIME_MS = 7000
@@ -541,13 +662,12 @@ class BombPickup:
         pygame.draw.circle(surface, (255,255,255), r.center, 3)
 
 # =========================
-# Bomba proyectil (se dispara automáticamente al recoger el pickup)
+# Bomba proyectil
 # =========================
 class BombProjectile:
     EXPLOSION_MS = 700
     def __init__(self, x, y, target_rect):
         self.rect = pygame.Rect(x-12, y-12, 24, 24)
-        # velocidad hacia el centro del jefe
         tx, ty = target_rect.centerx, target_rect.centery
         dx, dy = (tx - x), (ty - y)
         mag = math.hypot(dx, dy) or 1.0
@@ -593,23 +713,46 @@ class BombProjectile:
             pygame.draw.circle(surface, (255,120,0), (cx, cy), self.radius, 6)
 
 # =========================
-# Enemigos
+# Enemigos (asteroides animados)
 # =========================
-def crear_enemigos(cantidad):
-    return [pygame.Rect(random.randint(0, ANCHO - 40),
-                        random.randint(-250, -40), 40, 40) for _ in range(cantidad)]
+class FallingEnemy:
+    def __init__(self, x, y, w=ASTEROID_W, h=ASTEROID_H):
+        self.rect = pygame.Rect(x, y, w, h)
+        self.anim_idx = 0
+        self.anim_accum = 0  # ms
 
-def respawnear_enemigo(enemigo):
-    enemigo.x = random.randint(0, ANCHO - enemigo.width)
-    enemigo.y = random.randint(-200, -40)
+    def update(self, dt_ms, vel_y):
+        self.rect.y += vel_y
+        self.anim_accum += dt_ms
+        if self.anim_accum >= ASTEROID_DURS[self.anim_idx]:
+            self.anim_accum = 0
+            self.anim_idx = (self.anim_idx + 1) % len(ASTEROID_FRAMES)
+
+    def draw(self, surface):
+        drect = cam_apply_rect(self.rect)
+        surface.blit(ASTEROID_FRAMES[self.anim_idx], drect.topleft)
+
+def crear_enemigos(cantidad):
+    enemigos = []
+    for _ in range(cantidad):
+        x = random.randint(0, ANCHO - ASTEROID_W)
+        y = random.randint(-250, -ASTEROID_H)
+        enemigos.append(FallingEnemy(x, y))
+    return enemigos
+
+def respawnear_enemigo(enemigo: 'FallingEnemy'):
+    enemigo.rect.x = random.randint(0, ANCHO - enemigo.rect.width)
+    enemigo.rect.y = random.randint(-200, -enemigo.rect.height)
+    enemigo.anim_idx = 0
+    enemigo.anim_accum = 0
 
 # =========================
 # Variables de juego / reset
 # =========================
 def reset_juego():
     player = Jugador(ANCHO//2, ALTO - 10)
-    balas = []
-    vel_bala = -9
+    balas = []  # Lista de objetos Bala
+    vel_bala = -9  # se sigue usando para consistencia (Bala usa -9 por defecto)
     cadencia_ms = 200
     ultimo_disparo = 0
 
@@ -660,10 +803,10 @@ def reset_juego():
         "intro_text": "",
         "boss_intro_end": 0,
         # Bomba
-        "bomb_pickup": None,          # pickup activo
-        "bombs": [],                  # proyectiles activos
-        "next_bomb_spawn_time": 0,    # cuándo spawnear la próxima
-        "bomb_spawn_interval_ms": 9000  # cada 9 s si no hay activa
+        "bomb_pickup": None,
+        "bombs": [],
+        "next_bomb_spawn_time": 0,
+        "bomb_spawn_interval_ms": 9000
     }
 
 def activar_pantalla_nivel(juego, ahora):
@@ -773,8 +916,7 @@ try:
                     if evento.key == pygame.K_SPACE:
                         if ahora - juego["ultimo_disparo"] >= juego["cadencia_ms"]:
                             mx, my = juego["player"].get_muzzle_world()
-                            bala = pygame.Rect(mx - 4, my - 20, 8, 18)
-                            juego["balas"].append(bala)
+                            juego["balas"].append(Bala(mx, my, vy=juego["vel_bala"]))
                             juego["ultimo_disparo"] = ahora
                             reproducir(sonido_disparo)
 
@@ -823,49 +965,45 @@ try:
 
             # ¿Aparece jefe?
             needed_points = BOSS_POINTS_PER_LEVEL * juego["nivel"]
-            if (juego["puntaje"] >= needed_points 
+            if (juego["puntaje"] >= needed_points
                 and juego["nivel"] not in juego["boss_threshold_cleared"]
                 and not juego["boss_active"]):
                 juego["boss"] = Boss(juego["nivel"])
                 juego["boss_active"] = True
                 bg.switch_to_boss()
                 reproducir(sonido_boss)
-                # Cinemática breve
                 estado = BOSS_INTRO
                 juego["boss_intro_end"] = ahora + BOSS_INTRO_MS
-
-                # primer spawn de bomba tras 1.2s (cuando termina la intro)
                 juego["next_bomb_spawn_time"] = ahora + BOSS_INTRO_MS + 200
 
             # --- SIN JEFE ---
             if not juego["boss_active"]:
                 # balas jugador
                 for bala in juego["balas"][:]:
-                    bala.y += juego["vel_bala"]
-                    if bala.bottom < 0:
+                    if not bala.update():
                         juego["balas"].remove(bala)
 
-                # enemigos
+                # enemigos (asteroides animados)
                 vel_enemigo = juego["vel_enemigo_base"] + (juego["nivel"] - 1) * 0.9
                 if f_activo and keys[pygame.K_f]:
                     vel_enemigo *= 0.45
 
                 for enemigo in juego["enemigos"]:
-                    enemigo.y += vel_enemigo
-                    if enemigo.top > ALTO:
+                    enemigo.update(dt, vel_enemigo)
+                    if enemigo.rect.top > ALTO:
                         respawnear_enemigo(enemigo)
 
                 # colisiones balas/enemigos
                 for bala in juego["balas"][:]:
                     impactado = None
                     for enemigo in juego["enemigos"]:
-                        if bala.colliderect(enemigo):
+                        if bala.rect.colliderect(enemigo.rect):
                             impactado = enemigo
                             break
                     if impactado:
                         try: juego["balas"].remove(bala)
                         except ValueError: pass
-                        drop_x, drop_y = impactado.centerx, impactado.centery
+                        drop_x, drop_y = impactado.rect.centerx, impactado.rect.centery
                         respawnear_enemigo(impactado)
                         juego["puntaje"] += 10
                         reproducir(sonido_explosion)
@@ -877,7 +1015,7 @@ try:
                 # daño a la nave por choque
                 if ahora >= juego["invulnerable_hasta"]:
                     for enemigo in juego["enemigos"]:
-                        if juego["player"].rect.colliderect(enemigo):
+                        if juego["player"].rect.colliderect(enemigo.rect):
                             juego["vidas"] -= 1
                             juego["invulnerable_hasta"] = ahora + juego["invulnerable_ms"]
                             respawnear_enemigo(enemigo)
@@ -911,8 +1049,7 @@ try:
 
                 # balas jugador
                 for bala in juego["balas"][:]:
-                    bala.y += juego["vel_bala"]
-                    if bala.bottom < 0:
+                    if not bala.update():
                         juego["balas"].remove(bala)
 
                 # jefe
@@ -920,7 +1057,7 @@ try:
 
                 # daño al jefe por balas
                 for bala in juego["balas"][:]:
-                    if boss.rect.colliderect(bala):
+                    if boss.rect.colliderect(bala.rect):
                         try: juego["balas"].remove(bala)
                         except ValueError: pass
                         boss.hp -= 10
@@ -940,30 +1077,25 @@ try:
                     if r.top > ALTO or r.right < 0 or r.left > ANCHO:
                         boss_bullets.remove(b)
 
-                # === BOMB PICKUP: spawn periódico mientras haya jefe ===
+                # === BOMB PICKUP ===
                 if juego["bomb_pickup"] is None and ahora >= juego["next_bomb_spawn_time"]:
                     bx = boss.rect.centerx + random.randint(-80, 80)
                     by = boss.rect.bottom + random.randint(20, 60)
                     juego["bomb_pickup"] = BombPickup(bx, by, ahora)
-                    # programar el siguiente spawn (si esta no se recoge)
                     juego["next_bomb_spawn_time"] = ahora + juego["bomb_spawn_interval_ms"]
 
-                # actualizar/dibujar pickup y disparar automáticamente al recogerlo
                 bp = juego["bomb_pickup"]
                 if bp:
                     bp.update(ahora)
                     if not bp.active:
                         juego["bomb_pickup"] = None
-                        # intenta re-spawnear pronto si expiró sin recoger
                         juego["next_bomb_spawn_time"] = min(juego["next_bomb_spawn_time"], ahora + 1200)
                     elif bp.rect.colliderect(juego["player"].rect):
-                        # DISPARO AUTOMÁTICO: crear proyectil hacia el jefe
                         px, py = juego["player"].rect.centerx, juego["player"].rect.top
                         juego["bombs"].append(BombProjectile(px, py, boss.rect))
                         juego["bomb_pickup"] = None
                         reproducir(sonido_power)
 
-                # Bombas proyectil activas
                 for bomb in juego["bombs"][:]:
                     bomb.update(ahora, boss)
                     if not bomb.active:
@@ -1055,13 +1187,13 @@ try:
                 visible = ((ahora // 100) % 2 == 0)
             juego["player"].draw(ventana, visible=visible)
 
-            # Balas jugador
+            # Balas jugador (con imagen)
             for bala in juego["balas"]:
-                pygame.draw.rect(ventana, BLANCO, cam_apply_rect(bala))
+                bala.draw(ventana)
 
             if not juego["boss_active"]:
                 for enemigo in juego["enemigos"]:
-                    pygame.draw.rect(ventana, ROJO, cam_apply_rect(enemigo))
+                    enemigo.draw(ventana)
                 for pu in juego["powerups"]:
                     pu.draw(ventana, fuente)
             else:
