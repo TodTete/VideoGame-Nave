@@ -3,7 +3,7 @@ from .gif import load_gif_frames
 from .constants import ANCHO, ALTO
 
 class AnimatedBackground:
-    def __init__(self, path_main="assets/fondo.gif", path_boss="assets/fondo-gf.gif"):
+    def __init__(self, path_main="assets/scenes/fondo.gif", path_boss="assets/scenes/fondo-gf.gif"):
         self.frames_a, self.durs_a = load_gif_frames(path_main, size=(ANCHO, ALTO))
         self.frames_b, self.durs_b = load_gif_frames(path_boss, size=(ANCHO, ALTO))
         self.use_b = False

@@ -21,8 +21,8 @@ except Exception as e:
     print("[AVISO] Audio deshabilitado:", e)
 
 # ---- Música (helpers) ----
-MUSIC_MAIN = "assets/game.mp3"
-MUSIC_BOSS = "assets/boss.mp3"
+MUSIC_MAIN = "assets/music/game.mp3"
+MUSIC_BOSS = "assets/music/boss.mp3"
 
 def play_music(path, volume=0.5, loop=True, fade_ms=600):
     try:
@@ -50,17 +50,17 @@ fuente_titulo = load_font(56)
 init_after_display()
 
 # Sonidos SFX
-sonido_gameover = cargar_sonido("assets/game-over-381772.mp3", 0.6)
-sonido_disparo  = cargar_sonido("assets/laser-shot-ingame-230500.mp3", 0.4)
-sonido_explosion= cargar_sonido("assets/wood-crate-destory-2-97263.mp3", 0.55)
-sonido_power    = cargar_sonido("assets/powerup.mp3", 0.6)
+sonido_gameover = cargar_sonido("assets/music/game-over-381772.mp3", 0.6)
+sonido_disparo  = cargar_sonido("assets/music/laser-shot-ingame-230500.mp3", 0.4)
+sonido_explosion= cargar_sonido("assets/music/wood-crate-destory-2-97263.mp3", 0.55)
+sonido_power    = cargar_sonido("assets/music/powerup.mp3", 0.6)
 
 # Música de fondo inicial
 play_music(MUSIC_MAIN, volume=0.5, loop=True, fade_ms=800)
 
 # Fondo para juego (main/boss) y para MENÚ
-bg = AnimatedBackground("assets/fondo.gif", "assets/fondo-gf.gif")
-menu_frames, menu_durs = load_gif_frames("assets/space.gif", size=(ANCHO, ALTO))
+bg = AnimatedBackground("assets/scenes/fondo.gif", "assets/scenes/fondo-gf.gif")
+menu_frames, menu_durs = load_gif_frames("assets/scenes/space.gif", size=(ANCHO, ALTO))
 menu_idx = 0
 menu_tacc = 0
 

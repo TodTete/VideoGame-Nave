@@ -17,8 +17,8 @@ def reproducir(sonido):
 
 # --------- Texto / fuente ----------
 _FONT_CANDIDATES = [
-    "assets/Retronoid.ttf",
-    "assets/Retronoid.otf",
+    "assets/font/Retronoid.ttf",
+    "assets/font/Retronoid.otf",
     "Retronoid.ttf",
     "Retronoid.otf",
 ]

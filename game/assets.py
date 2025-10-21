@@ -11,7 +11,7 @@ BOSS_FRAMES = BOSS_DURS = None, None
 BALA_IMG = None
 
 def _cargar_asteroid_frames():
-    for ruta in ("assets/asteroides.gif",):
+    for ruta in ("assets/extra/asteroides.gif",):
         frames, durs = load_gif_frames(ruta, size=(ASTEROID_W, ASTEROID_H))
         if frames:
             print(f"[INFO] Asteroides: {len(frames)} frames")
@@ -22,7 +22,7 @@ def _cargar_asteroid_frames():
     return [surf], [120]
 
 def _cargar_player_frames():
-    for ruta in ("assets/nave.gif",):
+    for ruta in ("assets/extra/nave.gif",):
         frames, durs = load_gif_frames(ruta, size=(PLAYER_W, PLAYER_H))
         if frames:
             print(f"[INFO] Nave: {len(frames)} frames")
@@ -34,7 +34,7 @@ def _cargar_player_frames():
     return [surf], [120]
 
 def _cargar_boss_frames():
-    for ruta in ("assets/jefe.gif",):
+    for ruta in ("assets/personajes/jefe.gif",):
         frames, durs = load_gif_frames(ruta, size=(BOSS_W, BOSS_H))
         if frames:
             print(f"[INFO] Jefe: {len(frames)} frames")
@@ -46,12 +46,12 @@ def _cargar_boss_frames():
 
 def _cargar_imagen_bala():
     try:
-        img = pygame.image.load("assets/bala.png").convert_alpha()
+        img = pygame.image.load("assets/extra/bala.png").convert_alpha()
         # tamaño más grande (antes ~8x18)
         img = pygame.transform.smoothscale(img, (14, 30))
         return img
     except Exception as e:
-        print(f"[AVISO] No 'assets/bala.png': {e}")
+        print(f"[AVISO] No 'assets/extra/bala.png': {e}")
         ph = pygame.Surface((14, 30), pygame.SRCALPHA)
         pygame.draw.rect(ph, (255,255,255), ph.get_rect(), border_radius=3)
         return ph
