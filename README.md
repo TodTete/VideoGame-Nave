@@ -1,10 +1,11 @@
+
 ---
 
-# 🚀 Game Nave
+# 🌌 Spaces Astro
 
-Juego arcade 2D hecho con **Python + Pygame**.
-Esquiva fragmentos, recoge **power-ups**, carga **bombas** y enfréntate a un **jefe** en cada nivel.
-Incluye **fondos GIF animados con transición**, **pantallas de nivel / intro de jefe**, **cámara con paneo y temblor**, **hiscore** y **sonidos**.
+Arcade 2D hecho con **Python + Pygame**.
+Esquiva asteroides, recoge **power-ups**, consigue **bombas** durante el jefe y supera niveles cada vez más intensos.
+Incluye **fondos GIF animados** (juego y menú), **transiciones**, **cámara con paneo**, **hiscore**, **menús**, y **música**.
 
 [![Repo](https://img.shields.io/badge/GitHub-TodTete-blue?logo=github)](https://github.com/TodTete)
 [![Status](https://img.shields.io/badge/status-en%20desarrollo-orange)](#estado)
@@ -17,66 +18,82 @@ Incluye **fondos GIF animados con transición**, **pantallas de nivel / intro de
 
 ## 🎮 Gameplay
 
-* **Objetivo:** sumar puntos destruyendo cubos rojos.
+* **Objetivo:** sumar puntos destruyendo asteroides.
 * **Jefe por nivel:** aparece al alcanzar **250 × nivel** puntos.
   Al derrotarlo:
 
-  * Subes de nivel (pantalla **“NIVEL X”**),
-  * **Se reinician las vidas (3)**,
-  * Los cubos caen más rápido y el siguiente jefe es más agresivo.
-* **Fondo animado:** durante el jefe cambia a `fondo-gf.gif` con **transición suave** y vuelve al normal al terminar.
-* **Intro de jefe (cinemática corta):** bandas negras + enfoque al jefe antes de empezar la pelea.
-* **Cámara dinámica:** paneo suave que sigue a la nave (en X e Y) y **temblor** al impactar la bomba.
+  * Subes de nivel (pantalla **“NIVEL X”**).
+  * **Se reinician las vidas a 3**.
+  * Aumenta la **velocidad de caída** y el siguiente jefe es **más agresivo**.
+* **Fondos animados:**
+
+  * En juego: `fondo.gif` (normal) y `fondo-gf.gif` (modo jefe) con **crossfade**.
+  * En menús: `space.gif` como **background animado**.
+* **Intro de jefe:** bandas negras + marco de enfoque antes de empezar.
+* **Cámara dinámica:** paneo suave siguiendo a la nave.
 
 ### Power-ups 🔻
 
 * **S** → Aumenta **velocidad** de la nave (8 s).
 * **P** → **Disparo rápido** (8 s).
-* **F** → Queda “listo”; **mantén `F`** para **ralentizar** los obstáculos mientras dure (8 s).
+* **F** → Mientras dure (8 s), **mantén `F`** para **ralentizar** los obstáculos.
 
-### Bomba 💣 (solo en jefe)
+### Bomba 💣 (durante el jefe)
 
-* Aparece como **pickup** durante el combate contra el jefe.
-* Al **recogerla**, se **guarda** en tu inventario (`Bombas: N` en el HUD).
-* **Lánzala manualmente con `B`**: vuela hacia el jefe y causa **gran daño**.
-* El impacto activa **temblor de cámara**.
+* Aparece como **pickup** en la pelea.
+* Al **recogerla**, se **dispara automáticamente** contra el jefe (alto daño).
 
-### Jefe con ataques variados
+### Patrones del jefe
 
-Patrones rotativos:
-
-1. **Aimed** (dirigidos al jugador)
+1. **Aimed** (balas dirigidas)
 2. **Spread** (abanico)
-3. **Wave** (trayectorias sinusoidales)
+3. **Wave** (trayectoria sinusoidal)
 4. **Burst** (ráfagas rápidas)
-5. **Laser** (telegrafiado: aviso y luego rayo)
+5. **Laser** (telegrafiado: aviso → rayo)
+
+---
+
+## 🧭 Menús
+
+* **Inicio**: empieza la partida.
+* **Dificultad**: **Baja / Media / Alta / Extrema**.
+
+  * **EXTREMA**: mucho más dura (enemigos más rápidos, jefes con más vida, disparan más seguido, cambian de patrón más rápido y se mueven más).
+* **Opciones**: sliders para **Volumen Maestro**, **Efectos (SFX)** y **Música**.
+* **Créditos** al pie.
 
 ---
 
 ## ⌨️ Controles
 
-* **Flechas**: mover nave
-* **SPACE**: disparo normal
-* **B**: **lanzar bomba** (si recogiste una y el **jefe está activo**)
-* **F**: usar el poder de **ralentización** (si tienes el power-up F)
-* **ENTER**: **pausa** / reanudar
+* **Flechas**: mover
+* **SPACE**: disparo
+* **F**: activar ralentización (si tienes el power-up F)
+* **ENTER**: pausa / reanudar
 * **F11**: pantalla completa
 * **M**: silenciar
-* **ESC**: salir (o navegar entre estados)
+* **ESC**: salir / volver en menús
+
+> La bomba se dispara **automáticamente** al recogerla (solo durante el jefe).
 
 ---
 
-## ✨ Características
+## 🎧 Música y tipografía
 
-* 🛩️ **Nave** con inclinación (tilt) en giros.
-* 🎥 **Cámara con paneo** (suavizado) y **temblor** en explosiones grandes.
-* 👾 **Jefes** con **HP bar**, **patrones de ataque** variados y **intro** con enfoque.
-* 💣 **Bomba recogible** y **lanzable** a voluntad (inventario y HUD).
-* 🧩 **Power-ups** (S, F, P) con **timers** en HUD.
-* 🖼️ **Fondos GIF** animados con **crossfade** a fondo de jefe.
-* ⏸️ **Pausa** a pantalla negra.
-* 🏆 **Hiscore** persistente (`hiscore.txt`).
-* 🔊 Sonidos opcionales.
+* **Música de juego**: `assets/game.mp3`
+* **Música de jefe**: `assets/boss.mp3`
+* **Tipografía**: **Retronoid** (TTF/OTF). El juego intenta cargar:
+
+  * `assets/Retronoid.ttf`, `assets/Retronoid.otf`, o en raíz `Retronoid.ttf/otf`.
+    Copia tu archivo a `assets/Retronoid.ttf` para asegurar su uso.
+
+---
+
+## ✨ Detalles visuales
+
+* **Título del menú** en **dorado** (no amarillo).
+* Encabezados **OPCIONES** y **DIFICULTAD** en **morado** para no confundirlos con ítems.
+* **Bala** ligeramente **más grande** para mejor lectura.
 
 ---
 
@@ -84,29 +101,29 @@ Patrones rotativos:
 
 * **Python 3.10+**
 * **Pygame 2.x**
-* **Pillow 10.x** (para GIF animados)
+* **Pillow 10.x** (GIF animados)
 
-### Instalación
+**Instalación rápida**
 
 ```bash
-# 1) Clonar
-git clone https://github.com/TodTete/GameNave.git
-cd GameNave
+# 1) Clona el repo
+git clone https://github.com/TodTete/SpacesAstro.git
+cd SpacesAstro
 
-# 2) (Opcional) Crear venv
+# 2) (Opcional) Entorno virtual
 python -m venv .venv
 # Windows
 .venv\Scripts\activate
 # macOS / Linux
 source .venv/bin/activate
 
-# 3) Instalar dependencias
+# 3) Dependencias
 pip install -r requirements.txt
-# o manualmente:
+# o manual:
 pip install pygame pillow
 ```
 
-**requirements.txt** sugerido:
+**requirements.txt**
 
 ```
 pygame>=2.5.0
@@ -119,118 +136,80 @@ Pillow>=10.0.0
 
 Asegúrate de tener en `assets/`:
 
-* **Fondos**: `fondo.gif`, `fondo-gf.gif`
-* **Sonidos** (opcionales):
-  `game-start-317318.mp3`, `game-over-381772.mp3`, `laser-shot-ingame-230500.mp3`,
-  `wood-crate-destory-2-97263.mp3`, `boss.mp3`, `powerup.mp3`
+* **Fondos (juego)**: `fondo.gif`, `fondo-gf.gif`
+* **Fondo (menú)**: `space.gif`
+* **Sprites**: `asteroides.gif`, `nave.gif`, `bala.png`
+* **Audio**: `game.mp3`, `boss.mp3`, `game-over-381772.mp3`, `laser-shot-ingame-230500.mp3`,
+  `wood-crate-destory-2-97263.mp3`, `powerup.mp3`
+* **Fuente**: `Retronoid.ttf` (recomendado en `assets/`)
 
-Luego:
+Ejecuta:
 
 ```bash
-python -m src.main
-# o si ejecutas desde la raíz con main.py directo
-python src/main.py
+python main.py
 ```
 
 ---
 
-## 🗂️ Estructura del proyecto (modular)
+## 🗂️ Estructura del proyecto
 
 ```
-GameNave/
+SpacesAstro/
 ├─ assets/
+│  ├─ asteroides.gif
+│  ├─ nave.gif
+│  ├─ bala.png
 │  ├─ fondo.gif
 │  ├─ fondo-gf.gif
-│  ├─ game-start-317318.mp3
+│  ├─ space.gif
+│  ├─ game.mp3
+│  ├─ boss.mp3
 │  ├─ game-over-381772.mp3
 │  ├─ laser-shot-ingame-230500.mp3
 │  ├─ wood-crate-destory-2-97263.mp3
-│  ├─ boss.mp3
-│  └─ powerup.mp3
-├─ src/
-│  ├─ main.py          # punto de entrada
-│  ├─ game.py          # loop principal, estados, reglas, HUD y entradas
-│  ├─ ui.py            # dibujo de menús, HUD y pantallas
-│  ├─ entities.py      # Jugador, Boss, enemigos
-│  ├─ powerups.py      # Power-ups y lógica de bomba (pickup/proyectil)
-│  ├─ background.py    # AnimatedBackground (fondos GIF + crossfade)
-│  ├─ camera.py        # Cámara (paneo + temblor) y helpers cam_apply_*
-│  └─ utils.py         # constantes, colores, helpers (texto/sonido/hiscore)
+│  ├─ powerup.mp3
+│  └─ Retronoid.ttf
+├─ game/
+│  ├─ __init__.py
+│  ├─ constants.py
+│  ├─ utils.py
+│  ├─ gif.py
+│  ├─ assets.py
+│  ├─ background.py
+│  ├─ camera.py
+│  ├─ state.py
+│  └─ entities/
+│     ├─ player.py
+│     ├─ bullet.py
+│     ├─ enemy.py
+│     ├─ boss.py
+│     └─ powerups.py
+├─ hiscore.txt
+├─ main.py
 ├─ requirements.txt
 ├─ README.md
 └─ LICENSE
 ```
 
-> Si cambias rutas, ajusta las cargas de `assets/` en el código.
-
----
-
-## 🧠 Detalles técnicos
-
-* **Estados de juego:** `MENU`, `LEVEL_INTRO`, `BOSS_INTRO`, `JUGANDO`, `PAUSA`, `GAME_OVER`.
-* **Jefe por nivel:** se activa cuando `puntaje >= 250 * nivel`.
-* **Vidas:** se **reinician a 3** al comenzar cada nivel (`LEVEL_INTRO`).
-* **Cámara:**
-
-  * Paneo: `lerp` hacia un **offset** dependiente de la posición de la nave.
-  * Temblor: amplitud y duración configurables; se dispara en impacto de **bomba**.
-* **Bomba:**
-
-  * `BombPickup` aparece periódicamente durante el jefe (timeout si no se recoge).
-  * Al recogerla, incrementa `bomb_stock`.
-  * Tecla **`B`** lanza `BombProjectile` hacia el jefe (daño alto + shake).
-* **Boss patterns:** rotan cada cierto tiempo; **laser** incluye **pre-aviso** visual.
-* **Fondos:** `AnimatedBackground` gestiona frames y **transiciones**.
+> Si mueves rutas/archivos, ajusta las cargas en el código.
 
 ---
 
 ## 🧪 Troubleshooting
 
-* **El juego se “cierra”/para con `KeyboardInterrupt`:**
-  Eso indica una interrupción manual (Ctrl+C) o cierre de ventana. No es un crash.
-* **Audio no inicializa:**
-  En equipos sin salida de audio, la carga está envuelta en `try/except`. Puedes desactivar sonidos o verificar drivers.
-* **GIF estático / sin animación:**
-  Instala **Pillow** y revisa que los GIF existan y sean animados.
-* **Rendimiento bajo con GIF:**
-  Usa GIFs optimizados (≤800×600, menos frames) o cambia a imágenes estáticas.
-
----
-
-## 🧰 Ejecutable (opcional)
-
-Con **PyInstaller**:
-
-```bash
-pip install pyinstaller
-pyinstaller --noconfirm --onefile --windowed \
-  --add-data "assets/fondo.gif;assets" \
-  --add-data "assets/fondo-gf.gif;assets" \
-  --add-data "assets/*.mp3;assets" \
-  src/main.py
-```
-
-El binario estará en `dist/`.
-
----
-
-## 📸 Capturas (placeholders)
-
-* Menú principal renovado (instrucciones y mejor legibilidad)
-* Pantalla “NIVEL 1”
-* Enfoque de **BOSS_INTRO** (con bandas y marco)
-* HUD mostrando **Bombas: N (B)**
-* Impacto de bomba con **temblor** de cámara
+* **Pillow no disponible** → los GIF se verán estáticos (el juego sigue).
+* **Audio no inicia** → el juego continúa sin sonido (revisa drivers/salidas).
+* **Bajo rendimiento con GIF grandes** → usa GIF optimizados (≤800×600, menos frames).
 
 ---
 
 ## 🗺️ Roadmap
 
-* [ ] Varias clases de jefes (sprites y patrones únicos)
-* [ ] Partículas/estela en nave y colisiones
+* [ ] Más jefes con patrones únicos
+* [ ] Partículas y estelas
 * [ ] Tabla online de puntuaciones
-* [ ] Skins/temas visuales con selector en el menú
-* [ ] Modo “endless” y “boss rush”
+* [ ] Skins/temas visuales con selector
+* [ ] Modos “endless” y “boss-rush”
 
 ---
 
@@ -247,3 +226,6 @@ Este proyecto se distribuye bajo licencia **MIT**.
 Consulta [`LICENSE`](LICENSE) para más detalles.
 
 ---
+
+¿Quieres que agregue **GIFs/imagenes** (capturas del menú, HUD y jefe) en el README con un **grid** bonito y títulos? Puedo prepararte el bloque de markdown para pegarlas en cuanto las tengas.
+78
