@@ -1,3 +1,4 @@
+# game/app.py
 import pygame, random, math
 from .constants import *
 from .utils import cargar_sonido, reproducir, dibujar_texto, leer_hiscore, guardar_hiscore, load_font
@@ -5,16 +6,18 @@ from .background import AnimatedBackground
 from .camera import Camera
 from .assets import init_after_display
 from .state import reset_juego, activar_pantalla_nivel
-from .entities.bullet import Bala
 from .entities.enemy import respawnear_enemigo, crear_enemigos
 from .entities.powerups import PowerUp, BombPickup, BombProjectile
 from .entities.boss import Boss
-from .gif import load_gif_frames
 from .audio import play_music, Volumes
 from .menu_bg import MenuBG
 from .ui_helpers import draw_letterbox, draw_focus_ring, draw_slider
 from .character import CharacterSelect
 from .shooting import shoot_pattern
+from .gif import load_gif_frames
+
+# Estado adicional sin tocar constants.py
+LEVEL_SELECT = "LEVEL_SELECT"
 
 class GameApp:
     def __init__(self):
@@ -37,6 +40,7 @@ class GameApp:
         self.s_power    = cargar_sonido("assets/music/powerup.mp3", 0.6)
 
         # Módulos auxiliares
+        # NOTA: el fondo de juego (self.bg) se re-crea cuando eliges planeta
         self.bg = AnimatedBackground("assets/scenes/fondo.gif", "assets/scenes/fondo-gf.gif")
         self.menu_bg = MenuBG("assets/scenes/space.gif")
         self.cam = Camera()
@@ -64,8 +68,61 @@ class GameApp:
         # Personajes
         self.character = CharacterSelect()  # maneja selected_ship, previews, UI
 
+        # Selección de nivel (planetas)
+        self.level_selected = 1
+        self._init_planet_select()
+
         # Varios
         self.fullscreen = False
+
+    # -----------------
+    # Inicializar mini-menú de planetas
+    # -----------------
+    def _init_planet_select(self):
+        # Fondo del selector
+        try:
+            img = pygame.image.load("assets/scenes/plants/espacio.png").convert()
+            self.planet_bg = pygame.transform.smoothscale(img, (ANCHO, ALTO))
+        except Exception:
+            self.planet_bg = None
+
+        # Carga de iconos de planetas 1..8 (png)
+        self.planets = []
+        self.planet_rects = []
+        for i in range(1, 9):
+            path = f"assets/scenes/plants/{i}.png"
+            try:
+                img = pygame.image.load(path).convert_alpha()
+            except Exception:
+                # placeholder
+                img = pygame.Surface((88, 88), pygame.SRCALPHA)
+                pygame.draw.circle(img, (120, 180, 255), (44, 44), 44)
+                dibujar_texto(img, str(i), self.fuente_grande, (0,0,40), 44, 44, centrado=True)
+            # tamaño uniforme (sin perder proporción)
+            img = pygame.transform.smoothscale(img, (88, 88))
+            self.planets.append(img)
+
+        # Disposición: 2 filas x 4 columnas
+        self.planet_rects.clear()
+        margin_x = 80
+        spacing_x = (ANCHO - margin_x*2) // 3  # 4 columnas => 3 espacios
+        row_y_top = ALTO//2 - 110
+        row_y_bottom = ALTO//2 + 40
+        positions = []
+        for col in range(4):
+            x = margin_x + col * spacing_x
+            positions.append((x, row_y_top))
+        for col in range(4):
+            x = margin_x + col * spacing_x
+            positions.append((x, row_y_bottom))
+        # centrar iconos y crear rects
+        for i, (x, y) in enumerate(positions[:8]):
+            rect = self.planets[i].get_rect(center=(x, y))
+            self.planet_rects.append(rect)
+
+        self.planet_index = 0  # resaltado actual
+        # Flecha (triángulo) encima del planeta seleccionado
+        self.arrow_offset = -70  # distancia vertical sobre el centro del planeta
 
     # -----------------
     # Helpers de juego
@@ -73,6 +130,26 @@ class GameApp:
     def get_diff_mul(self):
         d = DIFFICULTY_PRESETS.get(self.difficulty_name, DIFFICULTY_PRESETS["MEDIA"])
         return d["enemy_speed"], d["boss_hp"]
+
+    def _apply_level_background(self, level_n: int):
+        """Crea el AnimatedBackground del nivel elegido."""
+        # fondo principal del nivel N
+        # soporta .png/.gif indistintamente (load_gif_frames debe manejar 1 frame si es png)
+        main_path_candidates = [f"assets/scenes/fondo-{level_n}.gif",
+                                f"assets/scenes/fondo-{level_n}.png"]
+        # el boss usa 'fondo-gf.gif' como antes
+        boss_path = "assets/scenes/fondo-gf.gif"
+        # escoger el primero existente
+        chosen = None
+        for p in main_path_candidates:
+            try:
+                with open(p, "rb"):
+                    chosen = p; break
+            except Exception:
+                continue
+        if not chosen:
+            chosen = "assets/scenes/fondo.gif"  # fallback
+        self.bg = AnimatedBackground(chosen, boss_path)
 
     # -----------------
     # Loop principal
@@ -91,6 +168,9 @@ class GameApp:
             # Fondos
             if self.estado in (MENU_MAIN, MENU_OPTIONS, MENU_DIFFICULTY, MENU_CHARACTER):
                 self.menu_bg.update(dt)
+            elif self.estado == LEVEL_SELECT:
+                # sin animación; usamos imagen estática self.planet_bg
+                pass
             elif self.estado not in (LEVEL_INTRO, PAUSA):
                 self.bg.update(dt)
 
@@ -100,6 +180,8 @@ class GameApp:
                     running = False
                 elif evento.type == pygame.KEYDOWN:
                     running = self.handle_keydown(evento, ahora, running)
+                elif evento.type == pygame.MOUSEBUTTONDOWN and self.estado == LEVEL_SELECT:
+                    self.handle_level_click(evento.pos, ahora)
 
             # Lógica principal
             self.update_logic(dt, ahora)
@@ -110,7 +192,7 @@ class GameApp:
             pygame.display.flip()
 
     # -----------------
-    # Eventos
+    # Eventos teclado
     # -----------------
     def handle_keydown(self, evento, ahora, running):
         if evento.key == pygame.K_F11:
@@ -127,6 +209,9 @@ class GameApp:
                 self.estado = PAUSA if self.estado == JUGANDO else JUGANDO
             elif self.estado in (MENU_OPTIONS, MENU_DIFFICULTY, MENU_CHARACTER, LEVEL_INTRO, BOSS_INTRO, GAME_OVER):
                 self.estado = MENU_MAIN
+            elif self.estado == LEVEL_SELECT:
+                # volver al menú principal desde el selector
+                self.estado = MENU_MAIN
             elif self.estado == MENU_MAIN:
                 return False  # salir
 
@@ -139,13 +224,10 @@ class GameApp:
             if evento.key in (pygame.K_RETURN, pygame.K_SPACE):
                 sel = self.menu_main_items[self.menu_main_index]
                 if sel == "INICIO":
-                    self.juego = reset_juego()
-                    if self.difficulty_name == "EXTREMA" and len(self.juego["enemigos"]) < 12:
-                        self.juego["enemigos"] += crear_enemigos(2)
-                    self.estado = LEVEL_INTRO
-                    activar_pantalla_nivel(self.juego, ahora)
-                    self.juego["intro_text"] = "NIVEL 1"
-                    play_music("assets/music/game.mp3", volume=self.vol.music_effective(), loop=True, fade_ms=500)
+                    # Ir al mini-menú de planetas
+                    self.estado = LEVEL_SELECT
+                    # reset de cursor por si acaso
+                    self.planet_index = (self.juego["nivel"] - 1) % 8
                 elif sel == "PERSONAJE":
                     self.estado = MENU_CHARACTER
                 elif sel == "DIFICULTAD":
@@ -190,6 +272,15 @@ class GameApp:
             if evento.key in (pygame.K_RETURN, pygame.K_SPACE):
                 self.estado = MENU_MAIN
 
+        # SELECTOR DE NIVEL (planetas)
+        elif self.estado == LEVEL_SELECT:
+            if evento.key in (pygame.K_LEFT, pygame.K_a):
+                self.planet_index = (self.planet_index - 1) % 8
+            if evento.key in (pygame.K_RIGHT, pygame.K_d):
+                self.planet_index = (self.planet_index + 1) % 8
+            if evento.key in (pygame.K_RETURN, pygame.K_SPACE):
+                self._choose_level(self.planet_index + 1, ahora)
+
         # PAUSA
         elif self.estado == PAUSA:
             if evento.key == pygame.K_RETURN:
@@ -223,11 +314,35 @@ class GameApp:
                 self.estado = PAUSA
             if evento.key == pygame.K_SPACE:
                 if ahora - self.juego["ultimo_disparo"] >= self.juego["cadencia_ms"]:
-                    shoot_pattern(self.juego, self.character.selected_ship)  # usa patrón por nave
+                    shoot_pattern(self.juego, self.character.selected_ship)  # patrón por nave
                     self.juego["ultimo_disparo"] = ahora
                     reproducir(self.s_disparo)
 
         return running
+
+    # -----------------
+    # Click en planetas
+    # -----------------
+    def handle_level_click(self, mouse_pos, ahora):
+        for i, rect in enumerate(self.planet_rects):
+            if rect.collidepoint(mouse_pos):
+                self.planet_index = i
+                self._choose_level(i + 1, ahora)
+                break
+
+    def _choose_level(self, level_n: int, ahora):
+        self.level_selected = level_n
+        # Reinicia juego y aplica nivel
+        self.juego = reset_juego()
+        self.juego["nivel"] = level_n  # forzar que el nivel mostrado sea el elegido
+        activar_pantalla_nivel(self.juego, ahora)
+        self.juego["intro_text"] = f"NIVEL {level_n}"
+        # Cargar fondo por nivel
+        self._apply_level_background(level_n)
+        # Música Main
+        play_music("assets/music/game.mp3", volume=self.vol.music_effective(), loop=True, fade_ms=500)
+        # Avanzar a pantalla de intro
+        self.estado = LEVEL_INTRO
 
     # -----------------
     # Update lógica
@@ -415,7 +530,7 @@ class GameApp:
                             j["player"].angle = 0.0
                             j["player"].target_angle = 0.0
 
-                # muerte del boss
+                # derrota del boss
                 if boss.hp <= 0:
                     j["boss_active"] = False
                     j["boss_threshold_cleared"].add(j["nivel"])
@@ -447,6 +562,11 @@ class GameApp:
         # Fondo
         if self.estado in (MENU_MAIN, MENU_OPTIONS, MENU_DIFFICULTY, MENU_CHARACTER):
             self.menu_bg.draw(self.ventana)
+        elif self.estado == LEVEL_SELECT:
+            if self.planet_bg:
+                self.ventana.blit(self.planet_bg, (0, 0))
+            else:
+                self.ventana.fill((0,0,0))
         else:
             if self.estado in (JUGANDO, BOSS_INTRO, GAME_OVER, LEVEL_INTRO, PAUSA):
                 self.bg.draw(self.ventana)
@@ -460,7 +580,6 @@ class GameApp:
             for i, label in enumerate(self.menu_main_items):
                 color = AMARILLO if i == self.menu_main_index else BLANCO
                 dibujar_texto(self.ventana, label, self.fuente_grande, color, ANCHO//2, card.top + 140 + i*55, centrado=True)
-            # Personaje actual
             from .constants import SHIP_DISPLAY
             dibujar_texto(self.ventana, f"Personaje: {SHIP_DISPLAY[self.character.selected_ship]}", self.fuente, AMARILLO, ANCHO//2, card.bottom - 60, centrado=True)
             dibujar_texto(self.ventana, "Créditos: created by TodTete", self.fuente, BLANCO, ANCHO//2, card.bottom - 20, centrado=True)
@@ -490,6 +609,32 @@ class GameApp:
                 color = AMARILLO if name == self.difficulty_name else BLANCO
                 dibujar_texto(self.ventana, name, self.fuente_grande, color, ANCHO//2, 180 + i*60, centrado=True)
             dibujar_texto(self.ventana, "↑/↓ selecciona, ENTER volver", self.fuente, AZUL, ANCHO//2, ALTO - 60, centrado=True)
+
+        elif self.estado == LEVEL_SELECT:
+            # Título
+            dibujar_texto(self.ventana, "ELIGE TU PLANETA", self.fuente_titulo, ORO, ANCHO//2, 70, centrado=True)
+            # Render de planetas + flecha
+            for i, img in enumerate(self.planets):
+                self.ventana.blit(img, self.planet_rects[i])
+
+            # Flecha sobre el seleccionado (triángulo)
+            sel_rect = self.planet_rects[self.planet_index]
+            arrow_x = sel_rect.centerx
+            arrow_y = sel_rect.top + self.arrow_offset
+            pts = [(arrow_x, arrow_y),
+                   (arrow_x - 16, arrow_y + 24),
+                   (arrow_x + 16, arrow_y + 24)]
+            pygame.draw.polygon(self.ventana, AMARILLO, pts)
+            pygame.draw.polygon(self.ventana, (90, 70, 0), pts, 2)
+
+            # Bordes sutiles en todos, más fuerte en el seleccionado
+            for i, r in enumerate(self.planet_rects):
+                pygame.draw.rect(self.ventana, (120,120,150), r.inflate(10,10), 2, border_radius=18)
+            pygame.draw.rect(self.ventana, AMARILLO, sel_rect.inflate(14,14), 3, border_radius=20)
+
+            # Leyenda
+            dibujar_texto(self.ventana, "←/→ para mover  |  ENTER o clic para seleccionar  |  ESC volver",
+                          self.fuente, BLANCO, ANCHO//2, ALTO - 50, centrado=True)
 
         elif self.estado == LEVEL_INTRO:
             self.ventana.fill(NEGRO)

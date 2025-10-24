@@ -22,11 +22,18 @@ MENU_MAIN = "MENU_MAIN"
 MENU_OPTIONS = "MENU_OPTIONS"
 MENU_DIFFICULTY = "MENU_DIFFICULTY"
 MENU_CHARACTER = "MENU_CHARACTER"  # << NUEVO
+MENU_LEVEL = "MENU_LEVEL"          # << NUEVO
 LEVEL_INTRO = "LEVEL_INTRO"
 BOSS_INTRO = "BOSS_INTRO"
 JUGANDO = "JUGANDO"
 PAUSA = "PAUSA"
 GAME_OVER = "GAME_OVER"
+
+# Selector de niveles
+LEVEL_COUNT = 8
+LEVEL_BG_PREFIX = "assets/scenes/fondo-"   # se usará fondo-1 .. fondo-8
+LEVEL_MENU_BG = "assets/scenes/plants/espacio.png"
+LEVEL_PLANET_DIR = "assets/scenes/plants"  # contiene 1.png .. 8.png
 
 # (Opcional) etiquetas visibles de naves
 SHIP_DISPLAY = {

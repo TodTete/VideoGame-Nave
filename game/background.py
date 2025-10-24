@@ -2,10 +2,31 @@ import pygame
 from .gif import load_gif_frames
 from .constants import ANCHO, ALTO
 
+def _load_any_frames(path, size):
+    """Carga frames desde GIF si aplica; si es PNG/JPG devuelve un frame."""
+    frames, durs = [], []
+    # Intento 1: como GIF
+    try:
+        frames, durs = load_gif_frames(path, size=size)
+        if frames:
+            return frames, durs
+    except Exception:
+        pass
+    # Intento 2: imagen estática
+    try:
+        img = pygame.image.load(path).convert_alpha()
+        img = pygame.transform.smoothscale(img, size)
+        return [img], [120]
+    except Exception as e:
+        print(f"[AVISO] No se pudo cargar fondo '{path}': {e}")
+        surf = pygame.Surface(size, pygame.SRCALPHA)
+        surf.fill((0,0,0,255))
+        return [surf], [120]
+
 class AnimatedBackground:
     def __init__(self, path_main="assets/scenes/fondo.gif", path_boss="assets/scenes/fondo-gf.gif"):
-        self.frames_a, self.durs_a = load_gif_frames(path_main, size=(ANCHO, ALTO))
-        self.frames_b, self.durs_b = load_gif_frames(path_boss, size=(ANCHO, ALTO))
+        self.frames_a, self.durs_a = _load_any_frames(path_main, size=(ANCHO, ALTO))
+        self.frames_b, self.durs_b = _load_any_frames(path_boss, size=(ANCHO, ALTO))
         self.use_b = False
         self.idx_a = self.idx_b = 0
         self.t_accum_a = self.t_accum_b = 0
@@ -13,6 +34,12 @@ class AnimatedBackground:
         self.transition_time = 0.0
         self.transition_duration = 1200
         self.alpha = 0
+
+    def set_main_path(self, path_main):
+        """Cambia el fondo principal (del nivel actual)."""
+        self.frames_a, self.durs_a = _load_any_frames(path_main, size=(ANCHO, ALTO))
+        self.idx_a = 0
+        self.t_accum_a = 0
 
     def switch_to_boss(self):
         if not self.transition and not self.use_b:
