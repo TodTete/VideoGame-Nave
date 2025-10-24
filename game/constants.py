@@ -21,11 +21,21 @@ ORO = (212, 175, 55)          # Dorado más “metálico” para título
 MENU_MAIN = "MENU_MAIN"
 MENU_OPTIONS = "MENU_OPTIONS"
 MENU_DIFFICULTY = "MENU_DIFFICULTY"
+MENU_CHARACTER = "MENU_CHARACTER"  # << NUEVO
 LEVEL_INTRO = "LEVEL_INTRO"
 BOSS_INTRO = "BOSS_INTRO"
 JUGANDO = "JUGANDO"
 PAUSA = "PAUSA"
 GAME_OVER = "GAME_OVER"
+
+# (Opcional) etiquetas visibles de naves
+SHIP_DISPLAY = {
+    "BRAYAN":   "N. de Brayan",
+    "FERNANDA": "N. de Fer",
+    "MARLIN":   "N. de Mar",
+    "TETE":     "N. de Tete",
+}
+SHIP_ORDER = ["BRAYAN", "FERNANDA", "MARLIN", "TETE"]
 
 # Progresión
 BOSS_POINTS_PER_LEVEL = 250

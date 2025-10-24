@@ -10,6 +10,7 @@ from game.entities.enemy import respawnear_enemigo, crear_enemigos
 from game.entities.powerups import PowerUp, BombPickup, BombProjectile
 from game.entities.boss import Boss
 from game.gif import load_gif_frames  # para fondo animado del MENÚ
+from game import assets as Assets      # << NUEVO (para set_player_skin y BALA2_IMG)
 
 # =========================
 # Inicialización
@@ -110,9 +111,35 @@ apply_volumes()
 hiscore = leer_hiscore()
 juego = reset_juego()
 
+# --- Personajes / selección ---
+selected_ship = "BRAYAN"  # default
+# Previews rápidos (cargan 1 vez)
+def _load_ship_preview(path, size=(100,100)):
+    try:
+        img = pygame.image.load(path).convert_alpha()
+        return pygame.transform.smoothscale(img, size)
+    except Exception:
+        s = pygame.Surface(size, pygame.SRCALPHA)
+        pygame.draw.polygon(s, (200,200,255),
+                            [(size[0]//2,6),(10,size[1]-8),(size[0]-10,size[1]-8)])
+        return s
+
+ship_previews = {
+    "BRAYAN":   _load_ship_preview("assets/extra/nave.gif", (100,100)),
+    "FERNANDA": _load_ship_preview("assets/extra/nave-f.jpg", (100,100)),
+    "MARLIN":   _load_ship_preview("assets/extra/nave-m.png", (100,100)),
+    "TETE":     _load_ship_preview("assets/extra/nave-t.png", (100,100)),
+}
+ship_index = 0  # índice en SHIP_ORDER
+
+def apply_selected_ship():
+    Assets.set_player_skin(selected_ship)
+
+apply_selected_ship()  # al inicio
+
 # Menús
 estado = MENU_MAIN
-menu_main_items = ["INICIO", "DIFICULTAD", "OPCIONES"]
+menu_main_items = ["INICIO", "PERSONAJE", "DIFICULTAD", "OPCIONES"]  # << cambiado
 menu_main_index = 0
 
 # Dificultad
@@ -135,6 +162,27 @@ def draw_slider(surface, x, y, w, value, selected):
 
 fullscreen = False
 bounds_rect = pygame.Rect(0,0,ANCHO,ALTO)
+
+def shoot_pattern(juego, ahora):
+    """Genera las balas según la nave elegida."""
+    mx, my = juego["player"].get_muzzle_world()
+    vy = juego["vel_bala"]
+
+    if selected_ship == "FERNANDA":
+        # una bala ancha
+        juego["balas"].append(Bala(mx, my, vy=vy, image=Assets.BALA2_IMG))
+    elif selected_ship == "MARLIN":
+        # doble bala con separación lateral
+        juego["balas"].append(Bala(mx - 12, my, vy=vy))
+        juego["balas"].append(Bala(mx + 12, my, vy=vy))
+    elif selected_ship == "TETE":
+        # triple bala: centro + laterales
+        juego["balas"].append(Bala(mx, my, vy=vy))
+        juego["balas"].append(Bala(mx - 14, my, vy=vy))
+        juego["balas"].append(Bala(mx + 14, my, vy=vy))
+    else:
+        # BRAYAN default
+        juego["balas"].append(Bala(mx, my, vy=vy))
 
 running = True
 try:
@@ -161,7 +209,7 @@ try:
                 running = False
 
             if evento.type == pygame.KEYDOWN:
-                # Globales
+                # Globales: F11, m, ESC (igual)...
                 if evento.key == pygame.K_F11:
                     fullscreen = not fullscreen
                     flags = pygame.FULLSCREEN if fullscreen else 0
@@ -173,11 +221,8 @@ try:
 
                 if evento.key == pygame.K_ESCAPE:
                     if estado in (JUGANDO, PAUSA):
-                        if estado == JUGANDO:
-                            estado = PAUSA
-                        elif estado == PAUSA:
-                            estado = JUGANDO
-                    elif estado in (MENU_OPTIONS, MENU_DIFFICULTY, LEVEL_INTRO, BOSS_INTRO, GAME_OVER):
+                        estado = PAUSA if estado == JUGANDO else JUGANDO
+                    elif estado in (MENU_OPTIONS, MENU_DIFFICULTY, MENU_CHARACTER, LEVEL_INTRO, BOSS_INTRO, GAME_OVER):
                         estado = MENU_MAIN
                     elif estado == MENU_MAIN:
                         running = False
@@ -192,17 +237,29 @@ try:
                         sel = menu_main_items[menu_main_index]
                         if sel == "INICIO":
                             juego = reset_juego()
-                            # Si empieza en EXTREMA, añade un poco más de presión desde el inicio
                             if difficulty_name == "EXTREMA" and len(juego["enemigos"]) < 12:
-                                juego["enemigos"] += crear_enemigos(2)  # +2 enemigos
+                                juego["enemigos"] += crear_enemigos(2)
                             estado = LEVEL_INTRO
                             activar_pantalla_nivel(juego, ahora)
                             juego["intro_text"] = "NIVEL 1"
                             play_music(MUSIC_MAIN, volume=vol_music*vol_master if not muted else 0.0, loop=True, fade_ms=500)
+                        elif sel == "PERSONAJE":  # << NUEVO
+                            estado = MENU_CHARACTER
                         elif sel == "DIFICULTAD":
                             estado = MENU_DIFFICULTY
                         elif sel == "OPCIONES":
                             estado = MENU_OPTIONS
+
+                # ---- MENÚ PERSONAJE ----
+                elif estado == MENU_CHARACTER:  # << NUEVO
+                    if evento.key in (pygame.K_LEFT, pygame.K_a):
+                        ship_index = (ship_index - 1) % len(SHIP_ORDER)
+                    if evento.key in (pygame.K_RIGHT, pygame.K_d):
+                        ship_index = (ship_index + 1) % len(SHIP_ORDER)
+                    if evento.key in (pygame.K_RETURN, pygame.K_SPACE):
+                        selected_ship = SHIP_ORDER[ship_index]
+                        apply_selected_ship()
+                        estado = MENU_MAIN
 
                 # ---- MENÚ OPCIONES ----
                 elif estado == MENU_OPTIONS:
@@ -261,14 +318,13 @@ try:
                         estado = MENU_MAIN
                         play_music(MUSIC_MAIN, volume=vol_music*vol_master if not muted else 0.0, loop=True, fade_ms=500)
 
-                # ---- JUGANDO ----
+                # ---- JUGANDO ---- 
                 elif estado == JUGANDO:
                     if evento.key == pygame.K_RETURN:
                         estado = PAUSA
                     if evento.key == pygame.K_SPACE:
                         if ahora - juego["ultimo_disparo"] >= juego["cadencia_ms"]:
-                            mx, my = juego["player"].get_muzzle_world()
-                            juego["balas"].append(Bala(mx, my, vy=juego["vel_bala"]))
+                            shoot_pattern(juego, ahora)  # << usa patrón por nave
                             juego["ultimo_disparo"] = ahora
                             reproducir(sonido_disparo)
 
@@ -486,7 +542,7 @@ try:
         # Dibujo
         # -------------------------
         # Fondo según estado:
-        if estado in (MENU_MAIN, MENU_OPTIONS, MENU_DIFFICULTY):
+        if estado in (MENU_MAIN, MENU_OPTIONS, MENU_DIFFICULTY, MENU_CHARACTER):
             draw_menu_bg(ventana)  # GIF space.gif
         else:
             if estado in (JUGANDO, BOSS_INTRO, GAME_OVER, LEVEL_INTRO, PAUSA):
@@ -496,37 +552,37 @@ try:
             card = pygame.Rect(0, 0, 560, 420); card.center = (ANCHO//2, ALTO//2 - 20)
             pygame.draw.rect(ventana, GRIS, card, border_radius=18)
             pygame.draw.rect(ventana, (70,70,85), card.inflate(8,8), 4, border_radius=22)
-            # Título dorado
             dibujar_texto(ventana, GAME_TITLE.upper(), fuente_titulo, ORO, ANCHO//2, card.top + 65, centrado=True)
             for i, label in enumerate(menu_main_items):
                 color = AMARILLO if i == menu_main_index else BLANCO
                 dibujar_texto(ventana, label, fuente_grande, color, ANCHO//2, card.top + 140 + i*55, centrado=True)
+            # Muestra selección actual de nave en el menú principal
+            dibujar_texto(ventana, f"Personaje: {SHIP_DISPLAY[selected_ship]}", fuente, AMARILLO, ANCHO//2, card.bottom - 60, centrado=True)
             dibujar_texto(ventana, "Créditos: created by TodTete", fuente, BLANCO, ANCHO//2, card.bottom - 20, centrado=True)
 
-        elif estado == MENU_OPTIONS:
-            # Encabezado morado
-            dibujar_texto(ventana, "OPCIONES", fuente_titulo, MORADO, ANCHO//2, 80, centrado=True)
-            labels = [
-                f"{options_items[0]}: {int(vol_master*100)}%",
-                f"{options_items[1]}: {int(vol_sfx*100)}%",
-                f"{options_items[2]}: {int(vol_music*100)}%",
-            ]
-            start_y = 180; spacing = 70; slider_w = 360
-            for i, text in enumerate(labels):
-                y = start_y + i*spacing
-                color = AMARILLO if i == options_index else BLANCO
-                dibujar_texto(ventana, text, fuente_grande, color, ANCHO//2, y - 28, centrado=True)
-                val = [vol_master, vol_sfx, vol_music][i]
-                draw_slider(ventana, ANCHO//2 - slider_w//2, y, slider_w, val, i==options_index)
-            dibujar_texto(ventana, "←/→ ajusta, ↑/↓ selecciona, ENTER volver", fuente, AZUL, ANCHO//2, ALTO - 60, centrado=True)
+        elif estado == MENU_CHARACTER:
+            # Pantalla de selección de personaje
+            dibujar_texto(ventana, "SELECCIONA PERSONAJE", fuente_titulo, MORADO, ANCHO//2, 80, centrado=True)
+            # carrusel simple 4 opciones
+            cx = ANCHO//2; cy = ALTO//2 + 10
+            spacing = 180
+            for idx, key in enumerate(SHIP_ORDER):
+                px = cx + (idx - ship_index) * spacing
+                rect = pygame.Rect(0, 0, 150, 180)  # un poco más grande
+                rect.center = (px, cy)
+                pygame.draw.rect(ventana, (55, 55, 70), rect, border_radius=38)
+                pygame.draw.rect(ventana, (100, 100, 135), rect, 2, border_radius=38)
 
-        elif estado == MENU_DIFFICULTY:
-            # Encabezado morado
-            dibujar_texto(ventana, "DIFICULTAD", fuente_titulo, MORADO, ANCHO//2, 90, centrado=True)
-            for i, name in enumerate(DIFFICULTY_ORDER):
-                color = AMARILLO if name == difficulty_name else BLANCO
-                dibujar_texto(ventana, name, fuente_grande, color, ANCHO//2, 180 + i*60, centrado=True)
-            dibujar_texto(ventana, "↑/↓ selecciona, ENTER volver", fuente, AZUL, ANCHO//2, ALTO - 60, centrado=True)
+                prev = ship_previews[key]
+                pr = prev.get_rect(center=(rect.centerx, rect.top + 70))
+                ventana.blit(prev, pr)
+
+                label = SHIP_DISPLAY[key]
+                # Más espacio visual bajo la imagen
+                dibujar_texto(ventana, label, fuente, 
+                  AMARILLO if idx == ship_index else BLANCO, 
+                  rect.centerx, rect.bottom - 18, centrado=True)
+            dibujar_texto(ventana, "←/→ para cambiar  |  ENTER para seleccionar  |  ESC volver", fuente, AZUL, ANCHO//2, ALTO - 60, centrado=True)
 
         elif estado == LEVEL_INTRO:
             ventana.fill(NEGRO)

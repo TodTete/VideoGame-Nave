@@ -3,8 +3,8 @@ from ..constants import ALTO, ANCHO
 import pygame
 
 class Bala:
-    def __init__(self, x, y, vy=-9):
-        self.image = Assets.BALA_IMG
+    def __init__(self, x, y, vy=-9, image=None):  # << image opcional
+        self.image = image if image is not None else Assets.BALA_IMG
         self.rect = self.image.get_rect(center=(x, y))
         self.vx = 0
         self.vy = vy
