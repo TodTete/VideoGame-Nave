@@ -226,6 +226,3 @@ Este proyecto se distribuye bajo licencia **MIT**.
 Consulta [`LICENSE`](LICENSE) para más detalles.
 
 ---
-
-¿Quieres que agregue **GIFs/imagenes** (capturas del menú, HUD y jefe) en el README con un **grid** bonito y títulos? Puedo prepararte el bloque de markdown para pegarlas en cuanto las tengas.
-78
