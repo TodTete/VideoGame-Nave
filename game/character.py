@@ -54,8 +54,8 @@ class CharacterSelect:
         self.previews = {
             "BRAYAN":   _load_frames("assets/extra/nave.gif",   (100, 100)),
             "FERNANDA": _load_frames("assets/extra/nave-f.jpg", (100, 100)),
-            "MARLIN":   _load_frames("assets/extra/nave-m.gif", (100, 100)),
-            "TETE":     _load_frames("assets/extra/nave-t.gif", (100, 100)),
+            "MARLIN":   _load_frames("assets/extra/nave-m.png", (100, 100)),
+            "TETE":     _load_frames("assets/extra/nave-t.png", (100, 100)),
         }
 
         # Estado de animación por nave

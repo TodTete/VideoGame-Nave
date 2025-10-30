@@ -167,13 +167,14 @@ class GameApp:
 
             # Fondos
             if self.estado in (MENU_MAIN, MENU_OPTIONS, MENU_DIFFICULTY, MENU_CHARACTER):
-                self.menu_bg.update(dt)
+                self.menu_bg.update(dt)  # Actualiza animación + zoom del fondo
+                self.menu_bg.draw(self.ventana)  # Dibuja el fondo con zoom
             elif self.estado == LEVEL_SELECT:
-                # sin animación; usamos imagen estática self.planet_bg
-                pass
+                self.menu_bg.update(dt)  # Mantiene la animación + zoom
+                self.menu_bg.draw(self.ventana)  # Dibuja el fondo con zoom y movimiento
             elif self.estado not in (LEVEL_INTRO, PAUSA):
                 self.bg.update(dt)
-
+                self.bg.draw(self.ventana)
             # Eventos
             for evento in pygame.event.get():
                 if evento.type == pygame.QUIT:
