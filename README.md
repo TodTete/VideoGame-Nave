@@ -216,7 +216,7 @@ SpacesAstro/
 ## 👤 Autor
 
 **TodTete**
-Créditos in-game: `created by: TodTete`
+Créditos in-game: `created by: TodTete / Ricardo Vallejo Sanchez`
 
 ---
 
