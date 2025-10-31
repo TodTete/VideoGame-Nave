@@ -210,7 +210,7 @@ SpacesAstro/
 * [ ] Tabla online de puntuaciones
 * [ ] Skins/temas visuales con selector
 * [ ] Modos “endless” y “boss-rush”
-
+* [ ] Cada nivel con Jefes distintos y mecanicas distintas
 ---
 
 ## 👤 Autor
