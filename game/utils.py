@@ -17,10 +17,10 @@ def reproducir(sonido):
 
 # --------- Texto / fuente ----------
 _FONT_CANDIDATES = [
-    "assets/font/Retronoid.ttf",
-    "assets/font/Retronoid.otf",
-    "Retronoid.ttf",
-    "Retronoid.otf",
+    "assets/font/RetroRaceDemoItalic.ttf",
+    "assets/font/RetroRaceDemoItalic.otf",
+    "RetroRaceDemoItalic.ttf",
+    "RetroRaceDemoItalic.otf",
 ]
 
 def _find_font_path():
