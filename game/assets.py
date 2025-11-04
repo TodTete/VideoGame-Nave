@@ -115,6 +115,7 @@ def cargar_boss_por_planeta(planet_id):
     candidatos = [
         f"assets/personajes/jefe-{planet_id}.png",
         f"assets/personajes/jefe-{planet_id}.jpg",
+        "assets/personajes/jefe.gif",
         "assets/personajes/jefe.png",
     ]
 
