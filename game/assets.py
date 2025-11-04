@@ -106,3 +106,36 @@ def init_after_display():
     BOSS_FRAMES,     BOSS_DURS     = _cargar_boss_frames()
     BALA_IMG = _cargar_imagen_bala()
     BALA2_IMG = _cargar_imagen_bala2()
+
+def cargar_boss_por_planeta(planet_id):
+    """
+    Carga los frames del jefe asociado al planeta actual.
+    Busca versiones animadas y estáticas; si no encuentra, usa un placeholder.
+    """
+    candidatos = [
+        f"assets/personajes/jefe-{planet_id}.png",
+        f"assets/personajes/jefe-{planet_id}.jpg",
+        "assets/personajes/jefe.png",
+    ]
+
+    for ruta in candidatos:
+        try:
+            frames, durs = load_gif_frames(ruta, size=(BOSS_W, BOSS_H))
+            if frames:
+                print(f"[INFO] Jefe del planeta {planet_id} cargado desde {ruta}")
+                return frames, durs
+        except Exception:
+            pass
+
+        try:
+            frames, durs = _frames_from_image(ruta, (BOSS_W, BOSS_H))
+            if frames:
+                print(f"[INFO] Jefe del planeta {planet_id} (imagen estática) {ruta}")
+                return frames, durs
+        except Exception:
+            pass
+
+    print(f"[AVISO] No se encontró jefe para planeta {planet_id}. Se usa placeholder.")
+    surf = pygame.Surface((BOSS_W, BOSS_H), pygame.SRCALPHA)
+    pygame.draw.rect(surf, (160, 30, 30), (0, 0, BOSS_W, BOSS_H), border_radius=16)
+    return [surf], [120]

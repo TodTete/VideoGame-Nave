@@ -52,6 +52,10 @@ class GameApp:
         # Hiscore & Estado
         self.hiscore = leer_hiscore()
         self.juego = reset_juego()
+        # Reiniciar cualquier referencia al jefe anterior
+        self.juego["boss"] = None
+        self.juego["boss_active"] = False
+        self.juego["boss_threshold_cleared"].clear()
 
         # Menús
         self.estado = MENU_MAIN

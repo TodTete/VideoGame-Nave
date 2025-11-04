@@ -13,6 +13,16 @@ class Boss:
     """
     def __init__(self, level, difficulty_hp_mul=1.0):
         self.level = level
+        planet_id = getattr(level, "planet_id", level if isinstance(level, int) else 1)
+        try:
+            frames, durs = Assets.cargar_boss_por_planeta(planet_id)
+            self.frames = frames
+            self.frame_durations = durs
+            self.image = self.frames[0]
+            self.current_frame = 0
+            print(f"[INFO] Boss actualizado para planeta {planet_id}")
+        except Exception as e:
+            print(f"[ERROR] No se pudo cargar el boss para planeta {planet_id}: {e}")
         self.w, self.h = BOSS_W, BOSS_H
         self.rect = pygame.Rect(ANCHO//2 - self.w//2, 60, self.w, self.h)
         base_hp = 160 + (level-1)*80
@@ -123,12 +133,13 @@ class Boss:
         elif self.attack_mode == 4: self._pattern_laser(ahora, boss_bullets)
 
         self.anim_accum += dt
-        if self.anim_accum >= Assets.BOSS_DURS[self.anim_idx]:
+        if self.anim_accum >= self.frame_durations[self.anim_idx]:
             self.anim_accum = 0
-            self.anim_idx = (self.anim_idx+1) % len(Assets.BOSS_FRAMES)
+            self.anim_idx = (self.anim_idx + 1) % len(self.frames)
+
 
     def draw(self, surface, cam_apply_rect, ahora):
-        frame = Assets.BOSS_FRAMES[self.anim_idx]
+        frame = self.frames[self.anim_idx]
         drect = cam_apply_rect(self.rect)
         surface.blit(frame, drect.topleft)
 
