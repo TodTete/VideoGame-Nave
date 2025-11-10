@@ -191,7 +191,7 @@ SpacesAstro/
 └─ LICENSE
 ```
 
-> Si mueves rutas/archivos, ajusta las cargas en el código.
+> Si mueves rutas/archivos, ajusta las cargas en el código, por favor y añadelo al README.
 
 ---
 
