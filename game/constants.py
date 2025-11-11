@@ -37,10 +37,10 @@ LEVEL_PLANET_DIR = "assets/scenes/plants"  # contiene 1.png .. 8.png
 
 # (Opcional) etiquetas visibles de naves
 SHIP_DISPLAY = {
-    "BRAYAN":   "N. de Brayan",
-    "FERNANDA": "N. de Fer",
-    "MARLIN":   "N. de Mar",
-    "TETE":     "N. de Tete",
+    "BRAYAN":   "Brayan",
+    "FERNANDA": "Fer",
+    "MARLIN":   "Mar",
+    "TETE":     "Tete",
 }
 SHIP_ORDER = ["BRAYAN", "FERNANDA", "MARLIN", "TETE"]
 
@@ -70,3 +70,5 @@ DIFFICULTY_PRESETS = {
     "EXTREMA":  {"enemy_speed": 1.75, "boss_hp": 1.90},  # ↑ antes 1.45 / 1.45
 }
 DIFFICULTY_ORDER = ["BAJA", "MEDIA", "ALTA", "EXTREMA"]
+
+STORY_INTRO = "STORY_INTRO"  # nueva pantalla de narración

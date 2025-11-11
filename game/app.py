@@ -196,6 +196,10 @@ class GameApp:
 
             pygame.display.flip()
 
+
+    def activar_pantalla_nivel(juego, ahora):
+        juego["intro_end_time"] = ahora + 3000
+
     # -----------------
     # Eventos teclado
     # -----------------
@@ -347,7 +351,13 @@ class GameApp:
         # Música Main
         play_music("assets/music/game.mp3", volume=self.vol.music_effective(), loop=True, fade_ms=500)
         # Avanzar a pantalla de intro
-        self.estado = LEVEL_INTRO
+        # Si es el primer planeta, mostrar historia
+        if level_n == 1:
+            self.estado = STORY_INTRO
+            self.story_start_time = ahora
+            self.story_duration = 7000  # duración de la narración en ms
+        else:
+            self.estado = LEVEL_INTRO
 
     # -----------------
     # Update lógica
@@ -355,7 +365,12 @@ class GameApp:
     def update_logic(self, dt, ahora):
         estado = self.estado
         j = self.juego
-
+        
+        if estado == STORY_INTRO:
+            # Esperar unos segundos antes de pasar al nivel
+            if ahora - self.story_start_time >= self.story_duration:
+                self.estado = LEVEL_INTRO
+        
         if estado == LEVEL_INTRO:
             if ahora >= j["intro_end_time"]:
                 self.estado = JUGANDO
@@ -640,6 +655,39 @@ class GameApp:
             # Leyenda
             dibujar_texto(self.ventana, "←/→ para mover  |  ENTER o clic para seleccionar  |  ESC volver",
                           self.fuente, BLANCO, ANCHO//2, ALTO - 50, centrado=True)
+
+        #33333333
+        elif self.estado == STORY_INTRO:
+            self.ventana.fill((0,0,0))
+            personaje = self.character.selected_ship
+            ruta_img = {
+                "BRAYAN": "assets/personajes/personaje-b.png",
+                "MARLIN": "assets/personajes/personaje-m.png",
+                "FERNANDA": "assets/personajes/personaje-f.png",
+                "TETE": "assets/personajes/personaje-t.png",
+            }.get(personaje, "assets/personajes/personaje-b.png")
+
+            try:
+                img = pygame.image.load(ruta_img).convert_alpha()
+                img = pygame.transform.smoothscale(img, (300, 300))
+                rect = img.get_rect(center=(ANCHO//2, ALTO//2 - 80))
+                self.ventana.blit(img, rect)
+            except Exception as e:
+                print(f"[AVISO] No se pudo cargar la imagen del personaje: {e}")
+
+        # Texto narrativo
+            historia = [
+                "Un ser oscuro llamado DOOM ha surgido...",
+                "Su objetivo: conquistar el sistema solar.",
+                "Con tu ayuda, deberás enfrentar a sus androides",
+                "y liberar los planetas de la lluvia de asteroides",
+            ]
+            y = ALTO//2 + 100
+            for linea in historia:
+                dibujar_texto(self.ventana, linea, self.fuente, BLANCO, ANCHO//2, y, centrado=True)
+                y += 35
+
+            dibujar_texto(self.ventana, "Presiona cualquier tecla para continuar...", self.fuente, AMARILLO, ANCHO//2, ALTO - 60, centrado=True)
 
         elif self.estado == LEVEL_INTRO:
             self.ventana.fill(NEGRO)
