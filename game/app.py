@@ -34,9 +34,9 @@ class GameApp:
         init_after_display()
 
         # Sonidos SFX
-        self.s_gameover = cargar_sonido("assets/music/game-over-381772.mp3", 0.6)
+        self.s_gameover = cargar_sonido("assets/music/game-over.mp3", 0.6)
         self.s_disparo  = cargar_sonido("assets/music/laser-shot-ingame-230500.mp3", 0.4)
-        self.s_explosion= cargar_sonido("assets/music/wood-crate-destory-2-97263.mp3", 0.55)
+        self.s_explosion= cargar_sonido("assets/music/break.mp3", 0.5)
         self.s_power    = cargar_sonido("assets/music/powerup.mp3", 0.6)
 
         # Módulos auxiliares
