@@ -177,6 +177,7 @@ class GameApp:
                 self.menu_bg.update(dt)  # Mantiene la animación + zoom
                 self.menu_bg.draw(self.ventana)  # Dibuja el fondo con zoom y movimiento
             elif self.estado in (LEVEL_INTRO, JUGANDO, BOSS_INTRO, PAUSA, GAME_OVER, STORY_INTRO):
+
                 self.bg.update(dt)
                 self.bg.draw(self.ventana)
             # Eventos

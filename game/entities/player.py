@@ -13,7 +13,11 @@ class Jugador:
         self.angle = 0.0; self.target_angle = 0.0
         self.ANGLE_MAX = 22.0; self.ANGLE_SPEED = 240.0
 
-        self.nose_local = (self.w/2, 6)
+        self.nose_local = (self.w/2, 6)        
+        self.frames = Assets.PLAYER_FRAMES
+        self.durations = Assets.PLAYER_DURS
+        self.frame_index = 0
+        self.frame_timer = 0
 
     def get_muzzle_world(self):
         from pygame.math import Vector2
@@ -45,7 +49,12 @@ class Jugador:
         self.anim_accum += dt_ms
         if self.anim_accum >= Assets.PLAYER_DURS[self.anim_idx]:
             self.anim_accum = 0
-            self.anim_idx = (self.anim_idx + 1) % len(Assets.PLAYER_FRAMES)
+            self.anim_idx = (self.anim_idx + 1) % len(Assets.PLAYER_FRAMES)    # Animación de la nave
+        if len(self.frames) > 1:
+            self.frame_timer += dt
+            if self.frame_timer >= self.durations[self.frame_index]:
+                self.frame_timer = 0
+                self.frame_index = (self.frame_index + 1) % len(self.frames)
 
     def draw(self, surface, cam_apply_point, visible=True):
         if not visible: return
