@@ -52,9 +52,9 @@ def _cargar_player_frames_for_skin(skin):
     elif skin == "MARLIN":
         return _frames_from_image("assets/extra/nave-m.gif", (PLAYER_W, PLAYER_H))
     elif skin == "TETE":
-        return _frames_from_image("assets/extra/nave-t.png", (PLAYER_W, PLAYER_H))
+        return _frames_from_image("assets/extra/nave-t.gif", (PLAYER_W, PLAYER_H))
     else:
-        return _frames_from_image("assets/extra/nave-m.png", (PLAYER_W, PLAYER_H))
+        return _frames_from_image("assets/extra/nave-m.gif", (PLAYER_W, PLAYER_H))
 
 def _cargar_boss_frames():
     for ruta in ("assets/personajes/jefe.gif",):
