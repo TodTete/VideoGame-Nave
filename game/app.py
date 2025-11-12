@@ -176,7 +176,7 @@ class GameApp:
             elif self.estado == LEVEL_SELECT:
                 self.menu_bg.update(dt)  # Mantiene la animación + zoom
                 self.menu_bg.draw(self.ventana)  # Dibuja el fondo con zoom y movimiento
-            elif self.estado not in (LEVEL_INTRO, PAUSA):
+            elif self.estado in (LEVEL_INTRO, JUGANDO, BOSS_INTRO, PAUSA, GAME_OVER, STORY_INTRO):
                 self.bg.update(dt)
                 self.bg.draw(self.ventana)
             # Eventos
@@ -363,7 +363,9 @@ class GameApp:
     # Update lógica
     # -----------------
     def update_logic(self, dt, ahora):
-        estado = self.estado
+        estado = self.estado                
+        if estado == MENU_CHARACTER:
+            self.character.update(dt)
         j = self.juego
         
         if estado == STORY_INTRO:

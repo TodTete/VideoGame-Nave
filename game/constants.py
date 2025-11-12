@@ -37,10 +37,10 @@ LEVEL_PLANET_DIR = "assets/scenes/plants"  # contiene 1.png .. 8.png
 
 # (Opcional) etiquetas visibles de naves
 SHIP_DISPLAY = {
-    "BRAYAN":   "Brayan",
-    "FERNANDA": "Fer",
-    "MARLIN":   "Mar",
-    "TETE":     "Tete",
+    "BRAYAN":   "N Brayan",
+    "FERNANDA": "N Fer",
+    "MARLIN":   "N Mar",
+    "TETE":     "N Tete",
 }
 SHIP_ORDER = ["BRAYAN", "FERNANDA", "MARLIN", "TETE"]
 
