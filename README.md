@@ -3,226 +3,218 @@
 
 # 🌌 Spaces Astro
 
-Arcade 2D hecho con **Python + Pygame**.
-Esquiva asteroides, recoge **power-ups**, consigue **bombas** durante el jefe y supera niveles cada vez más intensos.
-Incluye **fondos GIF animados** (juego y menú), **transiciones**, **cámara con paneo**, **hiscore**, **menús**, y **música**.
-
-[![Repo](https://img.shields.io/badge/GitHub-TodTete-blue?logo=github)](https://github.com/TodTete)
-[![Status](https://img.shields.io/badge/status-en%20desarrollo-orange)](#estado)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-![Python](https://img.shields.io/badge/python-3.10%2B-blue?logo=python)
-![Pygame](https://img.shields.io/badge/pygame-2.x-3776AB)
-![Pillow](https://img.shields.io/badge/pillow-10.x-555)
+Arcade 2D desarrollado en **Python + Pygame**, con fondos animados, jefes progresivos, sistema de niveles, power-ups, cámara dinámica, transiciones y manejo de audio. El proyecto incluye una organización modular, assets clasificados por tipo y un flujo general optimizado.
 
 ---
 
-## 🎮 Gameplay
+## 🎮 Descripción general
 
-* **Objetivo:** sumar puntos destruyendo asteroides.
-* **Jefe por nivel:** aparece al alcanzar **250 × nivel** puntos.
-  Al derrotarlo:
-
-  * Subes de nivel (pantalla **“NIVEL X”**).
-  * **Se reinician las vidas a 3**.
-  * Aumenta la **velocidad de caída** y el siguiente jefe es **más agresivo**.
-* **Fondos animados:**
-
-  * En juego: `fondo.gif` (normal) y `fondo-gf.gif` (modo jefe) con **crossfade**.
-  * En menús: `space.gif` como **background animado**.
-* **Intro de jefe:** bandas negras + marco de enfoque antes de empezar.
-* **Cámara dinámica:** paneo suave siguiendo a la nave.
-
-### Power-ups 🔻
-
-* **S** → Aumenta **velocidad** de la nave (8 s).
-* **P** → **Disparo rápido** (8 s).
-* **F** → Mientras dure (8 s), **mantén `F`** para **ralentizar** los obstáculos.
-
-### Bomba 💣 (durante el jefe)
-
-* Aparece como **pickup** en la pelea.
-* Al **recogerla**, se **dispara automáticamente** contra el jefe (alto daño).
-
-### Patrones del jefe
-
-1. **Aimed** (balas dirigidas)
-2. **Spread** (abanico)
-3. **Wave** (trayectoria sinusoidal)
-4. **Burst** (ráfagas rápidas)
-5. **Laser** (telegrafiado: aviso → rayo)
-
----
-
-## 🧭 Menús
-
-* **Inicio**: empieza la partida.
-* **Dificultad**: **Baja / Media / Alta / Extrema**.
-
-  * **EXTREMA**: mucho más dura (enemigos más rápidos, jefes con más vida, disparan más seguido, cambian de patrón más rápido y se mueven más).
-* **Opciones**: sliders para **Volumen Maestro**, **Efectos (SFX)** y **Música**.
-* **Créditos** al pie.
+* Juego estilo arcade orientado a esquivar y destruir asteroides.
+* Sistema de **jefe por nivel** con patrones avanzados.
+* Fondos GIF animados tanto en juego como en menús.
+* Power-ups temporales (velocidad, disparo rápido, ralentización).
+* Bomba automática durante la fase de jefe.
+* Navegación mediante menús con opciones, dificultad y créditos.
+* Cámara con paneo suave y transiciones visuales.
 
 ---
 
 ## ⌨️ Controles
 
-* **Flechas**: mover
+* **Flechas**: movimiento
 * **SPACE**: disparo
-* **F**: activar ralentización (si tienes el power-up F)
-* **ENTER**: pausa / reanudar
+* **F**: ralentización (cuando esté disponible)
+* **ENTER**: pausar o reanudar
 * **F11**: pantalla completa
 * **M**: silenciar
-* **ESC**: salir / volver en menús
-
-> La bomba se dispara **automáticamente** al recogerla (solo durante el jefe).
+* **ESC**: retroceder en menús o salir
 
 ---
 
-## 🎧 Música y tipografía
+## 🎧 Recursos utilizados
 
-* **Música de juego**: `assets/game.mp3`
-* **Música de jefe**: `assets/boss.mp3`
-* **Tipografía**: **Retronoid** (TTF/OTF). El juego intenta cargar:
-
-  * `assets/Retronoid.ttf`, `assets/Retronoid.otf`, o en raíz `Retronoid.ttf/otf`.
-    Copia tu archivo a `assets/Retronoid.ttf` para asegurar su uso.
+* Música en formato **.mp3** para juego, jefe y efectos.
+* Tipografías **Retronoid** y **RetroRace** en variantes TTF/OTF.
+* GIFs animados para fondos y sprites específicos.
+* Diversos personajes, jefes, proyectiles y elementos extra en “assets”.
 
 ---
 
-## ✨ Detalles visuales
-
-* **Título del menú** en **dorado** (no amarillo).
-* Encabezados **OPCIONES** y **DIFICULTAD** en **morado** para no confundirlos con ítems.
-* **Bala** ligeramente **más grande** para mejor lectura.
-
----
-
-## 📦 Requisitos
-
-* **Python 3.10+**
-* **Pygame 2.x**
-* **Pillow 10.x** (GIF animados)
-
-**Instalación rápida**
+## 📦 Instalación
 
 ```bash
-# 1) Clona el repo
 git clone https://github.com/TodTete/SpacesAstro.git
 cd SpacesAstro
 
-# 2) (Opcional) Entorno virtual
 python -m venv .venv
-# Windows
-.venv\Scripts\activate
-# macOS / Linux
-source .venv/bin/activate
+.venv\Scripts\activate   # Windows
+# o
+source .venv/bin/activate  # macOS / Linux
 
-# 3) Dependencias
 pip install -r requirements.txt
-# o manual:
-pip install pygame pillow
-```
-
-**requirements.txt**
-
-```
-pygame>=2.5.0
-Pillow>=10.0.0
 ```
 
 ---
 
-## ▶️ Ejecutar
-
-Asegúrate de tener en `assets/`:
-
-* **Fondos (juego)**: `fondo.gif`, `fondo-gf.gif`
-* **Fondo (menú)**: `space.gif`
-* **Sprites**: `asteroides.gif`, `nave.gif`, `bala.png`
-* **Audio**: `game.mp3`, `boss.mp3`, `game-over-381772.mp3`, `laser-shot-ingame-230500.mp3`,
-  `wood-crate-destory-2-97263.mp3`, `powerup.mp3`
-* **Fuente**: `Retronoid.ttf` (recomendado en `assets/`)
-
-Ejecuta:
+## ▶️ Ejecución
 
 ```bash
 python main.py
 ```
 
+Asegúrese de mantener la estructura original de archivos para evitar fallos en la carga de sprites, audio o fondos.
+
 ---
 
-## 🗂️ Estructura del proyecto
+## 🗂️ Estructura actual del proyecto
 
 ```
-SpacesAstro/
-├─ assets/
-│  ├─ asteroides.gif
-│  ├─ nave.gif
-│  ├─ bala.png
-│  ├─ fondo.gif
-│  ├─ fondo-gf.gif
-│  ├─ space.gif
-│  ├─ game.mp3
-│  ├─ boss.mp3
-│  ├─ game-over-381772.mp3
-│  ├─ laser-shot-ingame-230500.mp3
-│  ├─ wood-crate-destory-2-97263.mp3
-│  ├─ powerup.mp3
-│  └─ Retronoid.ttf
-├─ game/
-│  ├─ __init__.py
-│  ├─ constants.py
-│  ├─ utils.py
-│  ├─ gif.py
-│  ├─ assets.py
-│  ├─ background.py
-│  ├─ camera.py
-│  ├─ state.py
-│  └─ entities/
-│     ├─ player.py
-│     ├─ bullet.py
-│     ├─ enemy.py
-│     ├─ boss.py
-│     └─ powerups.py
-├─ hiscore.txt
-├─ main.py
-├─ requirements.txt
-├─ README.md
-└─ LICENSE
+C:.
+│   .gitignore
+│   hiscore.txt
+│   LICENSE
+│   main.py
+│   README.md
+│   requirements.txt
+│
+├───assets
+│   ├───extra
+│   │       asteroides.gif
+│   │       bala-2.png
+│   │       bala.png
+│   │       nave-f.jpg
+│   │       nave-m.gif
+│   │       nave-t.gif
+│   │       nave.gif
+│   │
+│   ├───font
+│   │       Retronoid Italic.otf
+│   │       Retronoid Italic.ttf
+│   │       Retronoid.otf
+│   │       Retronoid.ttf
+│   │       RetroRaceDemoItalic.ttf
+│   │       RetroRaceDemoRegular.ttf
+│   │       SPACEBAR.ttf
+│   │
+│   ├───music
+│   │       boss.mp3
+│   │       break.mp3
+│   │       game-over.mp3
+│   │       game-start-317318.mp3
+│   │       game.mp3
+│   │       laser-shot-ingame-230500.mp3
+│   │       powerup.mp3
+│   │       wood-crate-destory-2-97263.mp3
+│   │
+│   ├───personajes
+│   │       jefe-1.png
+│   │       jefe-2.png
+│   │       jefe-3.png
+│   │       jefe-4.png
+│   │       jefe-5.png
+│   │       jefe-6.png
+│   │       jefe-7.png
+│   │       jefe.gif
+│   │       malo.png
+│   │       personaje-b.png
+│   │       personaje-f.png
+│   │       personaje-m.png
+│   │       personaje-t.png
+│   │
+│   └───scenes
+│       │   fondo-1.png
+│       │   fondo-2.gif
+│       │   fondo-3.gif
+│       │   fondo-4.gif
+│       │   fondo-5.gif
+│       │   fondo-6.png
+│       │   fondo-7.gif
+│       │   fondo-8.gif
+│       │   fondo-gf.gif
+│       │   fondo.gif
+│       │   space.gif
+│       │
+│       └───plants
+│               1.png
+│               2.png
+│               3.png
+│               4.png
+│               5.png
+│               6.png
+│               7.png
+│               8.png
+│               espacio.gif
+│               espacio.png
+│               space.gif
+│
+├───game
+│   │   app.py
+│   │   assets.py
+│   │   audio.py
+│   │   background.py
+│   │   camera.py
+│   │   character.py
+│   │   constants.py
+│   │   enemy_spawning.py
+│   │   gif.py
+│   │   level_select.py
+│   │   menu_bg.py
+│   │   shooting.py
+│   │   state.py
+│   │   ui_helpers.py
+│   │   utils.py
+│   │   __init__.py
+│   │
+│   ├───entities
+│   │   │   boss.py
+│   │   │   bullet.py
+│   │   │   effects.py
+│   │   │   enemy.py
+│   │   │   player.py
+│   │   │   powerups.py
+│   │   │   __init__.py
+│   │   │
+│   │   └───__pycache__
+│   │           boss.cpython-311.pyc
+│   │           bullet.cpython-311.pyc
+│   │           enemy.cpython-311.pyc
+│   │           player.cpython-311.pyc
+│   │           powerups.cpython-311.pyc
+│   │           __init__.cpython-311.pyc
+│   │
+│   └───__pycache__
+│           app.cpython-311.pyc
+│           assets.cpython-311.pyc
+│           audio.cpython-311.pyc
+│           background.cpython-311.pyc
+│           camera.cpython-311.pyc
+│           character.cpython-311.pyc
+│           constants.cpython-311.pyc
+│           gif.cpython-311.pyc
+│           menu_bg.cpython-311.pyc
+│           shooting.cpython-311.pyc
+│           state.cpython-311.pyc
+│           ui_helpers.cpython-311.pyc
+│           utils.cpython-311.pyc
+│           __init__.cpython-311.pyc
+│
+└───__pycache__
+        naves.cpython-311.pyc
 ```
 
-> Si mueves rutas/archivos, ajusta las cargas en el código, por favor y añadelo al README.
-
 ---
 
-## 🧪 Troubleshooting
+## 🧪 Problemas comunes
 
-* **Pillow no disponible** → los GIF se verán estáticos (el juego sigue).
-* **Audio no inicia** → el juego continúa sin sonido (revisa drivers/salidas).
-* **Bajo rendimiento con GIF grandes** → usa GIF optimizados (≤800×600, menos frames).
+* Si los GIF no cargan, el juego mostrará sprites estáticos.
+* Si el audio falla, el título continúa ejecutándose sin sonido.
+* Optimice los GIF grandes para mejorar el rendimiento.
 
----
-
-## 🗺️ Roadmap
-
-* [ ] Más jefes con patrones únicos
-* [ ] Partículas y estelas
-* [ ] Tabla online de puntuaciones
-* [ ] Skins/temas visuales con selector
-* [ ] Modos “endless” y “boss-rush”
-* [ ] Cada nivel con Jefes distintos y mecanicas distintas
 ---
 
 ## 👤 Autor
 
-**TodTete**
-Créditos in-game: `created by: @TodTete / Ricardo Vallejo Sanchez`
-
----
-
-## 📄 Licencia
-
-Este proyecto se distribuye bajo licencia **MIT**.
-Consulta [`LICENSE`](LICENSE) para más detalles.
+Desarrollado por **TodTete**.
+Créditos visibles dentro del juego.
 
 ---
