@@ -214,7 +214,7 @@ C:.
 
 ## 👤 Autor
 
-Desarrollado por **TodTete**.
+Desarrollado por **@TodTete**.
 Créditos visibles dentro del juego.
 
 ---
