@@ -214,7 +214,7 @@ C:.
 
 ## 👤 Autor
 
-Desarrollado por **@TodTete**.
+Desarrollado por **@TodTete** / Ricardo Vallejo Sanchez.
 Créditos visibles dentro del juego.
 
 ---
