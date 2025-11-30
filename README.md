@@ -43,8 +43,8 @@ Arcade 2D desarrollado en **Python + Pygame**, con fondos animados, jefes progre
 ## 📦 Instalación
 
 ```bash
-git clone https://github.com/TodTete/SpacesAstro.git
-cd SpacesAstro
+git clone https://github.com/TodTete/VideoGame-Nave.git
+cd VideoGame-Nave
 
 python -m venv .venv
 .venv\Scripts\activate   # Windows
